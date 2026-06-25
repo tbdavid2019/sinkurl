@@ -51,7 +51,8 @@
   "nav": {
     "links": "連結",
     "analysis": "分析",
-    "realtime": "即時"
+    "realtime": "即時",
+    "settings": "設定"
   },
   "home": {
     "features": {

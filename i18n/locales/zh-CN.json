@@ -51,7 +51,8 @@
   "nav": {
     "links": "链接",
     "analysis": "分析",
-    "realtime": "实时"
+    "realtime": "实时",
+    "settings": "设置"
   },
   "home": {
     "features": {

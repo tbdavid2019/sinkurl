@@ -54,6 +54,15 @@ const fieldConfig = {
     comment: {
       component: 'textarea',
     },
+    transitionMode: {
+      label: 'Interstitial Page Mode',
+      description: 'Choose whether to show the transition/warning page. "Inherit" uses the global settings.',
+    },
+    transitionHtml: {
+      component: 'textarea',
+      label: 'Transition Page HTML',
+      description: 'Custom HTML to display on the transition page (e.g. advertisements, safety notices, or site info).',
+    },
     utm_source: {
       label: 'UTM Source',
       description: 'e.g., google, newsletter4',
@@ -84,9 +93,15 @@ const dependencies = [
     targetField: 'slug',
     when: () => isEdit,
   },
+  {
+    sourceField: 'optional.transitionMode',
+    type: DependencyType.HIDES,
+    targetField: 'optional.transitionHtml',
+    when: mode => mode === 'off',
+  },
 ]
 
-const getInitialUTMs = (urlStr) => {
+function getInitialUTMs(urlStr) {
   try {
     const q = getQuery(urlStr || '')
     return {
@@ -96,7 +111,8 @@ const getInitialUTMs = (urlStr) => {
       utm_term: q.utm_term || undefined,
       utm_content: q.utm_content || undefined,
     }
-  } catch { return {} }
+  }
+  catch { return {} }
 }
 
 const form = useForm({
@@ -106,6 +122,8 @@ const form = useForm({
     url: link.value.url,
     optional: {
       comment: link.value.comment,
+      transitionMode: link.value.transitionMode || 'inherit',
+      transitionHtml: link.value.transitionHtml || '',
       ...getInitialUTMs(link.value.url),
     },
   },
@@ -114,15 +132,22 @@ const form = useForm({
 })
 
 watch(() => form.values.url, (newUrl) => {
-  if (!newUrl) return
+  if (!newUrl)
+    return
   try {
     const q = getQuery(newUrl)
-    if (q.utm_source !== form.values.optional?.utm_source) form.setFieldValue('optional.utm_source', q.utm_source)
-    if (q.utm_medium !== form.values.optional?.utm_medium) form.setFieldValue('optional.utm_medium', q.utm_medium)
-    if (q.utm_campaign !== form.values.optional?.utm_campaign) form.setFieldValue('optional.utm_campaign', q.utm_campaign)
-    if (q.utm_term !== form.values.optional?.utm_term) form.setFieldValue('optional.utm_term', q.utm_term)
-    if (q.utm_content !== form.values.optional?.utm_content) form.setFieldValue('optional.utm_content', q.utm_content)
-  } catch {}
+    if (q.utm_source !== form.values.optional?.utm_source)
+      form.setFieldValue('optional.utm_source', q.utm_source)
+    if (q.utm_medium !== form.values.optional?.utm_medium)
+      form.setFieldValue('optional.utm_medium', q.utm_medium)
+    if (q.utm_campaign !== form.values.optional?.utm_campaign)
+      form.setFieldValue('optional.utm_campaign', q.utm_campaign)
+    if (q.utm_term !== form.values.optional?.utm_term)
+      form.setFieldValue('optional.utm_term', q.utm_term)
+    if (q.utm_content !== form.values.optional?.utm_content)
+      form.setFieldValue('optional.utm_content', q.utm_content)
+  }
+  catch {}
 })
 
 watch(() => [
@@ -132,39 +157,46 @@ watch(() => [
   form.values.optional?.utm_term,
   form.values.optional?.utm_content,
 ], ([source, medium, campaign, term, content]) => {
-  if (!form.values.url) return
+  if (!form.values.url)
+    return
   try {
     const urlObj = new URL(form.values.url)
     if (source) {
       urlObj.searchParams.set('utm_source', source.trim())
-    } else {
+    }
+    else {
       urlObj.searchParams.delete('utm_source')
     }
     if (medium) {
       urlObj.searchParams.set('utm_medium', medium.trim())
-    } else {
+    }
+    else {
       urlObj.searchParams.delete('utm_medium')
     }
     if (campaign) {
       urlObj.searchParams.set('utm_campaign', campaign.trim())
-    } else {
+    }
+    else {
       urlObj.searchParams.delete('utm_campaign')
     }
     if (term) {
       urlObj.searchParams.set('utm_term', term.trim())
-    } else {
+    }
+    else {
       urlObj.searchParams.delete('utm_term')
     }
     if (content) {
       urlObj.searchParams.set('utm_content', content.trim())
-    } else {
+    }
+    else {
       urlObj.searchParams.delete('utm_content')
     }
     const newUrlString = urlObj.toString()
     if (form.values.url !== newUrlString) {
       form.setFieldValue('url', newUrlString)
     }
-  } catch {}
+  }
+  catch {}
 }, { deep: true })
 
 function randomSlug() {
@@ -202,6 +234,8 @@ async function onSubmit(formData) {
     url: formData.url,
     slug: formData.slug,
     ...(formData.optional || []),
+    transitionMode: formData.optional?.transitionMode || 'inherit',
+    transitionHtml: formData.optional?.transitionHtml || '',
     expiration: formData.optional?.expiration ? date2unix(formData.optional?.expiration, 'end') : undefined,
   }
   const { link: newLink } = await useAPI(isEdit ? '/api/link/edit' : '/api/link/create', {

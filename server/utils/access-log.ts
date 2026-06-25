@@ -11,7 +11,7 @@ import {
   MediaPlayers,
   Vehicles,
 } from 'ua-parser-js/extensions'
-import { parseURL, getQuery, withQuery } from 'ufo'
+import { getQuery, parseURL, withQuery } from 'ufo'
 import { getFlag } from '@/utils/flag'
 
 function toBlobNumber(blob: string) {

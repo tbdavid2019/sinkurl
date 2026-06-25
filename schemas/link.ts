@@ -21,4 +21,6 @@ export const LinkSchema = z.object({
   title: z.string().trim().max(2048).optional(),
   description: z.string().trim().max(2048).optional(),
   image: z.string().trim().url().max(2048).optional(),
+  transitionMode: z.enum(['inherit', 'on', 'off']).default('inherit'),
+  transitionHtml: z.string().trim().max(10000).optional(),
 })

@@ -14,7 +14,7 @@ export default defineAppConfig({
     taxId: '90867427',
     representative: 'HUNG FUNG CHAK',
     address: '臺北市信義區松德路171號9樓之2',
-    addressEnglish: '9 F.-2, No. 171, Songde Rd., Xinyi Dist., Taipei City 110030, Taiwan (R.O.C.)'
+    addressEnglish: '9 F.-2, No. 171, Songde Rd., Xinyi Dist., Taipei City 110030, Taiwan (R.O.C.)',
   },
   previewTTL: 300, // 5 minutes
   slugRegex: /^[a-z0-9]+(?:-[a-z0-9]+)*$/i,
