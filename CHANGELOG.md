@@ -4,7 +4,9 @@
 
 ---
 
-## 📌 1. Cloudflare Pages 與 Workers 的編譯預設差異 (API 404 問題)
+## 📅 [2026-06-25]
+
+### 📌 1. Cloudflare Pages 與 Workers 的編譯預設差異 (API 404 問題)
 
 ### ❌ 遇到問題
 在執行部署後，訪問 `https://glsoft.ai/dashboard/login` 登入或點擊任何 API 時，瀏覽器回傳 `[GET] "/api/verify": 404` 錯誤。
