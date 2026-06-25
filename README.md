@@ -214,3 +214,10 @@ export default defineAppConfig({
    ```bash
    pnpm deploy:worker
    ```
+
+---
+
+## 📝 開發與部署備忘錄 (CHANGELOG)
+
+如果您在開發、部署（例如 Cloudflare Pages API 404 問題）或登入設定中遇到任何問題，請參考根目錄下的 [CHANGELOG.md](file:///Users/david/Documents/git/tbdavid2019/Sink/CHANGELOG.md) 檔案，裡面詳細記錄了常見的「踩坑」經驗與解決方案。
+
