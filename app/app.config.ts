@@ -1,7 +1,7 @@
 export default defineAppConfig({
   title: 'glsoft.ai',
   email: '104@david888.com',
-  github: 'https://github.com/tbdavid2019/sink',
+  github: 'https://github.com/tbdavid2019/sinkurl',
   twitter: 'https://x.com/oobwei',
   telegram: 'https://t.me/a6a7a8a9abc',
   discord: 'https://discord.gg/9BCGcgCWpj',

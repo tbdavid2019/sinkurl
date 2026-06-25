@@ -52,6 +52,77 @@ cp .env.example .env
 ```bash
 pnpm dev
 ```
+> 💡 **本地開發是如何運行的？**
+> 本地開發時，Wrangler 會在您的電腦中自動**模擬（Emulate）** Cloudflare 運行環境（包含 KV 資料庫與 AI 綁定）。它會將模擬的 KV 資料儲存在專案根目錄下的 `.data`（或 `.wrangler`）資料夾中，因此您不需要連線到線上 Cloudflare 即可在 `http://localhost:3000` 進行完整的短網址新增、查詢及後台測試，且不會影響到您線上的真實數據。
+
+---
+
+## ⚙️ 首次部署 Cloudflare Workers 的參數與設定步驟
+
+如果您是**第一次**將本專案部署到您的 Cloudflare 帳戶，必須完成以下幾個關鍵的資源建立與參數配置：
+
+### 1. 建立 KV 命名空間 (KV Namespace)
+本專案的短網址數據需要存放在 Cloudflare KV 中：
+1. 登入您的 Cloudflare 控制台，前往 **Storage & Databases (存儲與資料庫)** -> **KV**。
+2. 點擊 **Create a namespace (建立命名空間)**，將其命名（例如：`KV`）。
+3. 建立後複製生成的 **Namespace ID**（一串 32 位的英數混合字串）。
+4. 開啟專案根目錄的 [wrangler.jsonc](file:///Users/david/Documents/git/tbdavid2019/Sink/wrangler.jsonc)，找到 `kv_namespaces`，將 ID 填入：
+   ```json
+   "kv_namespaces": [
+     {
+       "binding": "KV",
+       "id": "請在此處填入您複製的 Namespace ID"
+     }
+   ]
+   ```
+
+### 2. 啟用 Cloudflare Analytics Engine (分析引擎)
+為了讓網站能記錄並顯示短網址的點擊數據：
+1. 在 Cloudflare 控制台首頁，點擊右側面板的 **Account details (帳戶詳情)**。
+2. 找到 **Analytics Engine (分析引擎)**，點擊 **Set up (設定)** 啟用免費額度（Free tier）。
+   * *註：本專案預設使用名為 `sink` 的數據集與 `ANALYTICS` 綁定，此設定已在 `wrangler.jsonc` 配置完畢。*
+
+### 3. 部署並設定環境變數與機密 (Secrets)
+當您使用 `pnpm deploy:worker` 部署上線後，請前往 **Workers & Pages** -> 選擇您的 Worker 專案 -> 進入 **Settings (設定)** -> **Variables (變數)** -> 點擊 **Add (新增變數)**，並設定以下 3 個關鍵參數：
+
+| 環境變數名稱 | 類型 | 說明 |
+| :--- | :--- | :--- |
+| **`NUXT_SITE_TOKEN`** | **機密 (Secret)** | **【必填】** 後台登入密碼，長度必須**大於等於 8 個字元**（且不能為純數字）。 |
+| **`NUXT_CF_ACCOUNT_ID`**| **變數 (Variable)** | **【統計分析必填】** 您的 Cloudflare 帳戶 ID（可在首頁右側面板或網址中找到）。 |
+| **`NUXT_CF_API_TOKEN`** | **機密 (Secret)** | **【統計分析必填】** 您的 Cloudflare API Token。建立時必須賦予 **`Account.Account Analytics` (讀取帳戶分析)** 的權限。 |
+
+*(選填)*：如果您不希望訪客直接訪問您的短網址根域名首頁，您也可以額外新增一個變數 `NUXT_HOME_URL`，設定為您主站的 URL，訪客訪問根域名時便會自動跳轉。
+
+---
+
+## 🔐 進入後台與密碼設定
+
+### 1. 如何進入管理後台
+* **本地開發**：打開瀏覽器訪問 `http://localhost:3000/dashboard`。
+* **線上部署**：訪問 `https://您的網域/dashboard`。
+* 進入該路徑後，系統會引導您至登入頁面，您需要輸入設定的 **Site Token（即後台密碼）** 即可登入管理面板。
+
+### 2. 如何設定後台密碼 (Site Token)
+後台密碼是透過環境變數 `NUXT_SITE_TOKEN` 來進行設定的（不支援純數字，多個密碼可用英文逗號 `,` 分隔，例如 `Password1,Password2`）：
+
+#### 💡 本地開發環境：
+直接修改專案根目錄下的 `.env` 檔案：
+```env
+NUXT_SITE_TOKEN="您的自訂密碼"
+```
+
+#### 🌐 生產環境 (Cloudflare Workers)：
+您可以使用以下兩種方式之一來設定線上環境的密碼：
+
+* **方法 A：透過 Cloudflare 網頁控制台設定（推薦，安全度高）**
+  如上方的表格所述，直接在 **Settings -> Variables** 中新增 `NUXT_SITE_TOKEN` 并點擊右側的 **Encrypt (加密)**。
+* **方法 B：使用 Wrangler 命令列設定**
+  您也可以直接在終端機中運行以下指令上傳密碼：
+  ```bash
+  # 如果您有多個 Cloudflare 帳戶，請在指令前帶上 CLOUDFLARE_ACCOUNT_ID
+  CLOUDFLARE_ACCOUNT_ID="您的帳號ID" pnpm wrangler secret put NUXT_SITE_TOKEN
+  ```
+  依終端機提示輸入您要設定的密碼即可。
 
 ---
 
@@ -78,7 +149,7 @@ pnpm dev
 export default defineAppConfig({
   title: 'glsoft.ai',
   email: '104@david888.com',
-  github: 'https://github.com/tbdavid2019/sink',
+  github: 'https://github.com/tbdavid2019/sinkurl',
   twitter: 'https://x.com/oobwei',
   telegram: 'https://t.me/a6a7a8a9abc',
   discord: 'https://discord.gg/9BCGcgCWpj',
@@ -111,7 +182,7 @@ export default defineAppConfig({
    pnpm wrangler login
    ```
 2. 設定您的 KV 命名空間 ID：
-   - 確保在 [wrangler.jsonc](file:///Users/david/Documents/git/tbdavid2019/Sink/wrangler.jsonc) 中已填入正確的 `kv_namespaces.id`。
+   - 確保在 [wrangler.jsonc](file:///Users/david/Documents/git/tbdavid2019/Sink/wrangler.jsonc) 中已填入正確的 `kv_namespaces.id`（請參考上方的首次部署步驟）。
 3. 執行部署指令：
    ```bash
    pnpm deploy:worker
