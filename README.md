@@ -14,6 +14,7 @@
 - **自訂後綴 (Slug)**：支援自定義短網址後綴，並支援大小寫區分。
 - **AI 智慧後綴**：整合 AI 服務，自動生成具備語意且好記的短網址後綴。
 - **連結過期設定**：支援為特定的短網址設定到期時間，逾期自動失效。
+- **Transition Page**：支援全域或單一短連結顯示中介跳轉頁，可放安全提示、自訂 HTML 或廣告內容。
 
 ## 🧱 技術棧
 
@@ -64,6 +65,74 @@ pnpm dev
 
 > 💡 **本地開發是如何運行的？**
 > 本地開發時，Wrangler 會在您的電腦中自動**模擬（Emulate）** Cloudflare 運行環境（包含 KV 資料庫與 AI 綁定）。它會將模擬的 KV 資料儲存在專案根目錄下的 `.data`（或 `.wrangler`）資料夾中，因此您不需要連線到線上 Cloudflare 即可在 `http://localhost:3000` 進行完整的短網址新增、查詢及後台測試，且不會影響到您線上的真實數據。
+
+---
+
+## 🧭 Transition Page 用法
+
+Transition Page 是短連結在真正跳轉前的中介頁。它適合拿來放：
+
+- 外部網站安全提醒
+- 廣告或導流內容
+- 品牌說明
+- 活動公告
+
+### 1. 全域設定
+
+進入後台：
+
+`Dashboard -> Settings -> Transition Page`
+
+你會看到 **Global Transition Mode**，共有三種模式：
+
+- `Disabled`：全域關閉 transition page。只有個別短連結明確設成 `on` 才會顯示。
+- `Default`：使用各短連結自己的 `inherit / on / off` 設定。
+- `Force All Links`：強制所有短連結都先顯示 transition page。
+
+### 2. 個別短連結設定
+
+進入後台：
+
+`Dashboard -> Links -> Edit Link`
+
+在編輯器裡可設定 **Interstitial Page Mode**：
+
+- `inherit`：跟隨全域設定
+- `on`：這個短連結一定顯示 transition page
+- `off`：這個短連結不顯示 transition page
+
+若全域模式為 `Force All Links`，則個別短連結的 `off` 不會生效。
+
+### 3. 自訂顯示內容
+
+可在兩個地方填入自訂內容：
+
+- 全域設定中的 **Transition Page Content (HTML/Markdown)**
+- 單一短連結中的 **Transition Page HTML**
+
+優先順序如下：
+
+1. 單一短連結自己的 `Transition Page HTML`
+2. 全域 `Transition Page Content`
+3. 系統預設的離站提醒畫面
+
+### 4. 生效規則
+
+目前 transition page 的判斷規則如下：
+
+1. 如果全域模式是 `Force All Links`，所有短連結都顯示 transition page。
+2. 否則，如果該短連結設為 `on`，就顯示 transition page。
+3. 否則，如果該短連結不是 `off`，且全域模式是 `Default`，就顯示 transition page。
+4. 其他情況直接跳轉。
+
+### 5. 設定何時會生效
+
+短連結的 transition 設定現在會直接讀取最新 KV 資料，不再依賴短連結目的地快取 TTL。也就是說：
+
+- 剛改完某個短連結的 `Interstitial Page Mode`
+- 剛改完全域 `Global Transition Mode`
+
+再次打開短連結時，應該就會反映最新設定，不需要再等舊快取過期。
 
 ---
 
@@ -220,4 +289,3 @@ export default defineAppConfig({
 ## 📝 開發與部署備忘錄 (CHANGELOG)
 
 如果您在開發、部署（例如 Cloudflare Pages API 404 問題）或登入設定中遇到任何問題，請參考根目錄下的 [CHANGELOG.md](file:///Users/david/Documents/git/tbdavid2019/Sink/CHANGELOG.md) 檔案，裡面詳細記錄了常見的「踩坑」經驗與解決方案。
-

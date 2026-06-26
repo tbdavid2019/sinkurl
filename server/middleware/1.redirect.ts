@@ -1,11 +1,12 @@
 import type { LinkSchema } from '@@/schemas/link'
 import type { z } from 'zod'
+import { TransitionSettingsSchema } from '@@/schemas/settings'
 import { parsePath, withQuery } from 'ufo'
 
 export default eventHandler(async (event) => {
   const { pathname: slug } = parsePath(event.path.replace(/^\/|\/$/g, '')) // remove leading and trailing slashes
   const { slugRegex, reserveSlug } = useAppConfig(event)
-  const { homeURL, linkCacheTtl, redirectWithQuery, caseSensitive } = useRuntimeConfig(event)
+  const { homeURL, redirectWithQuery, caseSensitive } = useRuntimeConfig(event)
   const { cloudflare } = event.context
 
   if (event.path === '/' && homeURL)
@@ -16,8 +17,9 @@ export default eventHandler(async (event) => {
 
     let link: z.infer<typeof LinkSchema> | null = null
 
+    // Redirect behavior must reflect recent edits immediately, especially transition-mode changes.
     const getLink = async (key: string) =>
-      await KV.get(`link:${key}`, { type: 'json', cacheTtl: linkCacheTtl })
+      await KV.get(`link:${key}`, { type: 'json' })
 
     const lowerCaseSlug = slug.toLowerCase()
     link = await getLink(caseSensitive ? slug : lowerCaseSlug)
@@ -38,8 +40,10 @@ export default eventHandler(async (event) => {
       }
       const target = redirectWithQuery ? withQuery(link.url, getQuery(event)) : link.url
 
-      const globalTransition = await KV.get('setting:transition', { type: 'json' }) || { enabled: false, content: '' }
-      const showTransition = link.transitionMode === 'on' || (link.transitionMode !== 'off' && globalTransition.enabled)
+      const globalTransition = TransitionSettingsSchema.parse(await KV.get('setting:transition', { type: 'json' }) || {})
+      const showTransition = globalTransition.mode === 'force'
+        || link.transitionMode === 'on'
+        || (link.transitionMode !== 'off' && globalTransition.mode === 'inherit')
 
       if (showTransition) {
         const transitionContent = link.transitionHtml || globalTransition.content

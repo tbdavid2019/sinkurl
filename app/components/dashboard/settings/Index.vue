@@ -1,4 +1,5 @@
 <script setup>
+import { TransitionModeSchema } from '@@/schemas/settings'
 import { marked } from 'marked'
 import { toast } from 'vue-sonner'
 
@@ -9,9 +10,11 @@ const content = ref('')
 const loadingEnterprise = ref(false)
 
 // Transition settings
-const transitionEnabled = ref(false)
+const transitionMode = ref('disabled')
 const transitionContent = ref('')
 const loadingTransition = ref(false)
+const transitionEnabled = computed(() => transitionMode.value !== 'disabled')
+const transitionModeOptions = TransitionModeSchema.options
 
 const loading = computed(() => loadingEnterprise.value || loadingTransition.value)
 
@@ -58,7 +61,7 @@ async function fetchTransitionSettings() {
   loadingTransition.value = true
   try {
     const data = await useAPI('/api/public/settings/transition')
-    transitionEnabled.value = data?.enabled || false
+    transitionMode.value = data?.mode || 'disabled'
     transitionContent.value = data?.content || ''
   }
   catch (error) {
@@ -76,7 +79,7 @@ async function saveTransitionSettings() {
     await useAPI('/api/settings/transition', {
       method: 'POST',
       body: {
-        enabled: transitionEnabled.value,
+        mode: transitionMode.value,
         content: transitionContent.value,
       },
     })
@@ -421,64 +424,52 @@ onMounted(() => {
             </CardHeader>
 
             <CardContent class="flex-1 space-y-6 p-6">
-              <!-- Toggle Field -->
               <div
                 class="
-                  flex items-center justify-between rounded-xl border
-                  border-zinc-100 bg-zinc-50 p-4
+                  flex flex-col gap-4 rounded-xl border border-zinc-100
+                  bg-zinc-50 p-4
                   dark:border-zinc-800 dark:bg-zinc-950
                 "
               >
-                <div class="space-y-0.5 pr-4">
-                  <label
-                    for="enable-transition" class="
-                      cursor-pointer text-sm font-semibold tracking-wide
-                    "
-                  >Enable Global Transition Page</label>
+                <div class="space-y-0.5">
+                  <label class="text-sm font-semibold tracking-wide">Global Transition Mode</label>
                   <p
                     class="
                       text-xs text-zinc-500
                       dark:text-zinc-400
                     "
                   >
-                    Show an intermediate page for all links by default (unless explicitly overridden by the link configuration).
+                    `Disabled` means no global transition page. `Default` lets each short link use `inherit/on/off`. `Force All Links` ignores per-link opt-out.
                   </p>
                 </div>
-                <button
-                  id="enable-transition"
-                  type="button"
-                  role="switch"
-                  :aria-checked="transitionEnabled"
-                  :disabled="loading"
+                <select
+                  v-model="transitionMode"
                   class="
-                    relative inline-flex h-6 w-11 shrink-0 cursor-pointer
-                    rounded-full border-2 border-transparent transition-colors
-                    duration-200 ease-in-out
-                    focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2
+                    w-full rounded-xl border border-zinc-200 bg-white p-3
+                    text-sm
+                    focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500
                     focus:outline-none
                     disabled:cursor-not-allowed disabled:opacity-50
+                    dark:border-zinc-800 dark:bg-zinc-900
                   "
-                  :class="transitionEnabled ? `
-                    bg-emerald-500
-                    dark:bg-emerald-600
-                  ` : `
-                    bg-zinc-200
-                    dark:bg-zinc-800
-                  `"
-                  @click="transitionEnabled = !transitionEnabled"
+                  :disabled="loading"
                 >
-                  <span
-                    aria-hidden="true"
-                    class="
-                      pointer-events-none inline-block h-5 w-5 transform
-                      rounded-full bg-white shadow ring-0 transition
-                      duration-200 ease-in-out
-                    "
-                    :class="transitionEnabled ? 'translate-x-5' : `
-                      translate-x-0
-                    `"
-                  />
-                </button>
+                  <option value="disabled">
+                    Disabled
+                  </option>
+                  <option
+                    v-if="transitionModeOptions.includes('inherit')"
+                    value="inherit"
+                  >
+                    Default
+                  </option>
+                  <option
+                    v-if="transitionModeOptions.includes('force')"
+                    value="force"
+                  >
+                    Force All Links
+                  </option>
+                </select>
               </div>
 
               <!-- HTML/Markdown Editor Field -->
@@ -593,7 +584,7 @@ onMounted(() => {
                   Transition Page Disabled
                 </h3>
                 <p class="max-w-xs text-xs text-zinc-400">
-                  Global transition page is disabled. Visitors will jump straight to the destination page.
+                  Global transition page is disabled. Only links explicitly set to `on` will show the transition page.
                 </p>
               </div>
               <div

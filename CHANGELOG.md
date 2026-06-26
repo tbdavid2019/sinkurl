@@ -4,6 +4,45 @@
 
 ---
 
+## 📅 [2026-06-26]
+
+### 📌 1. Transition Page 新增全域強制模式
+
+### ✅ 變更內容
+Transition Page 的全域設定由原本單純的開關，調整為三種模式：
+
+* `Disabled`：全域不啟用 transition page。
+* `Default`：依各短連結自己的 `inherit / on / off` 設定決定是否顯示。
+* `Force All Links`：強制所有短連結都先進入 transition page，不接受個別短連結關閉。
+
+### 💡 使用方式
+進入後台 `Dashboard -> Settings -> Transition Page`：
+
+1. 將 **Global Transition Mode** 設成 `Default`，表示由各短連結自行決定。
+2. 將 **Global Transition Mode** 設成 `Force All Links`，表示所有短連結都一定會經過 transition page。
+3. 如果只想讓少數短連結生效，請將全域設成 `Disabled` 或 `Default`，再到該短連結編輯頁將 `Interstitial Page Mode` 設為 `on`。
+
+---
+
+### 📌 2. 個別短連結剛修改 transition 設定時，可能短時間內看起來沒生效
+
+### ❌ 遇到問題
+例如將 `glsoft.ai/104` 設為要顯示 transition page，但實測時仍直接跳轉到目的網址。
+
+### 🔍 原因分析
+原本 redirect middleware 在讀取短連結資料時使用了 KV 快取 TTL。這會導致：
+
+* 短連結剛被修改後，邊緣節點仍可能在一段時間內讀到舊資料。
+* `transitionMode`、`transitionHtml` 等欄位即使已在後台儲存完成，前台訪問該短連結時仍可能繼續沿用舊的 redirect 行為。
+
+### 💡 解決方法
+已將 redirect 路徑上的短連結讀取改為直接讀最新 KV，不再對短連結目標資料使用快取 TTL。現在：
+
+* 個別短連結的 `on / off / inherit` 設定會更快反映。
+* 全域 transition 模式調整後，使用者再次訪問短連結時會更接近即時生效。
+
+---
+
 ## 📅 [2026-06-25]
 
 ### 📌 1. Cloudflare Pages 與 Workers 的編譯預設差異 (API 404 問題)
