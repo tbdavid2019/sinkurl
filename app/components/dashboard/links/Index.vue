@@ -50,8 +50,8 @@ async function getLinks() {
 
 async function getTotalLinksCount() {
   try {
-    const data = await useAPI('/api/link/count') as { count: number }
-    totalLinks.value = data.count
+    const data = await useAPI('/api/link/count')
+    totalLinks.value = Number(data?.count || 0)
     countLoaded.value = true
   }
   catch (error) {
