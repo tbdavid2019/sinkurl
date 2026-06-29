@@ -167,6 +167,7 @@
     "no_results": "No links found.",
     "group_title": "Links",
     "copy_success": "Copy successful!",
+    "total": "Total short links",
     "created_at": "Created At",
     "updated_at": "Updated At",
     "expires_at": "Expires At",

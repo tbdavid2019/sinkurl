@@ -163,6 +163,7 @@
     "no_results": "Keine Links gefunden.",
     "group_title": "Links",
     "copy_success": "Erfolgreich kopiert!",
+    "total": "Gesamtzahl Kurzlinks",
     "created_at": "Erstellt am",
     "updated_at": "Aktualisiert am",
     "expires_at": "Läuft ab am",

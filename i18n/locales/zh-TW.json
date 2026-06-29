@@ -167,6 +167,7 @@
     "no_results": "未找到連結。",
     "group_title": "連結列表",
     "copy_success": "複製成功！",
+    "total": "短網址總數",
     "created_at": "創建時間",
     "updated_at": "更新時間",
     "expires_at": "過期時間",

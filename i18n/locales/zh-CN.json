@@ -164,6 +164,7 @@
     "no_results": "未找到链接。",
     "group_title": "链接列表",
     "copy_success": "复制成功！",
+    "total": "短链接总数",
     "created_at": "创建时间",
     "updated_at": "更新时间",
     "expires_at": "过期时间",

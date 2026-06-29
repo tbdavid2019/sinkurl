@@ -1,8 +1,11 @@
 <script setup>
+import NumberFlow from '@number-flow/vue'
 import { useInfiniteScroll } from '@vueuse/core'
 import { Loader } from 'lucide-vue-next'
 
 const links = ref([])
+const totalLinks = ref(0)
+const countLoaded = ref(false)
 const limit = 24
 let cursor = ''
 let listComplete = false
@@ -45,6 +48,17 @@ async function getLinks() {
   }
 }
 
+async function getTotalLinksCount() {
+  try {
+    const data = await useAPI('/api/link/count') as { count: number }
+    totalLinks.value = data.count
+    countLoaded.value = true
+  }
+  catch (error) {
+    console.error(error)
+  }
+}
+
 const { isLoading } = useInfiniteScroll(
   document,
   getLinks,
@@ -65,12 +79,22 @@ function updateLinkList(link, type) {
   else if (type === 'delete') {
     const index = links.value.findIndex(l => l.id === link.id)
     links.value.splice(index, 1)
+    if (countLoaded.value) {
+      totalLinks.value = Math.max(0, totalLinks.value - 1)
+    }
   }
   else {
     links.value.unshift(link)
     sortBy.value = 'newest'
+    if (countLoaded.value) {
+      totalLinks.value += 1
+    }
   }
 }
+
+onMounted(() => {
+  getTotalLinksCount()
+})
 </script>
 
 <template>
@@ -89,6 +113,15 @@ function updateLinkList(link, type) {
       </DashboardNav>
       <LazyDashboardLinksSearch />
     </div>
+    <Card class="gap-2 px-5 py-4">
+      <CardDescription>{{ $t('links.total') }}</CardDescription>
+      <CardTitle class="text-3xl">
+        <NumberFlow
+          :class="{ 'opacity-60 blur-md': !countLoaded }"
+          :value="totalLinks"
+        />
+      </CardTitle>
+    </Card>
     <section
       class="
         grid grid-cols-1 gap-4

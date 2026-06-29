@@ -163,6 +163,7 @@
     "no_results": "Aucun lien trouvé.",
     "group_title": "Liens",
     "copy_success": "Copie réussie !",
+    "total": "Nombre total de liens courts",
     "created_at": "Créé le",
     "updated_at": "Mis à jour le",
     "expires_at": "Expire le",

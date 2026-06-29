@@ -15,6 +15,7 @@
 - **AI 智慧後綴**：整合 AI 服務，自動生成具備語意且好記的短網址後綴。
 - **連結過期設定**：支援為特定的短網址設定到期時間，逾期自動失效。
 - **Transition Page**：支援全域或單一短連結顯示中介跳轉頁，可放安全提示、自訂 HTML 或廣告內容。
+- **Dashboard 總數可視化**：`Dashboard -> Links` 會直接顯示目前站內短網址總數，方便快速掌握規模。
 
 ## 🧱 技術棧
 
@@ -270,6 +271,10 @@ export default defineAppConfig({
 ---
 
 ## 📦 部署方式
+
+如果你想先看「Pages 和 Workers 差在哪、該選哪個」，可先讀：
+
+- [docs/deployment/install-options.md](/Users/david/Documents/git/tbdavid2019/Sink/docs/deployment/install-options.md)
 
 ### 部署至 Cloudflare Workers
 

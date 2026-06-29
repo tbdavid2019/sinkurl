@@ -157,6 +157,54 @@ describe.sequential('/api/link/list', () => {
   })
 })
 
+describe.sequential('/api/link/count', () => {
+  it('returns the total number of links and updates after create/delete', async () => {
+    const payload = generateMock(z.object({
+      url: z.string().url(),
+      slug: z.string().min(1).max(50),
+    }))
+
+    const beforeResponse = await fetchWithAuth('/api/link/count')
+    expect(beforeResponse.status).toBe(200)
+    const beforeData = await beforeResponse.json()
+    expect(beforeData.count).toEqual(expect.any(Number))
+
+    const createResponse = await fetchWithAuth('/api/link/create', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+    expect(createResponse.status).toBe(201)
+
+    const afterCreateResponse = await fetchWithAuth('/api/link/count')
+    expect(afterCreateResponse.status).toBe(200)
+    const afterCreateData = await afterCreateResponse.json()
+    expect(afterCreateData.count).toBe(beforeData.count + 1)
+
+    const deleteResponse = await fetchWithAuth('/api/link/delete', {
+      method: 'POST',
+      body: JSON.stringify({ slug: payload.slug }),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+    expect(deleteResponse.status).toBe(204)
+
+    const afterDeleteResponse = await fetchWithAuth('/api/link/count')
+    expect(afterDeleteResponse.status).toBe(200)
+    const afterDeleteData = await afterDeleteResponse.json()
+    expect(afterDeleteData.count).toBe(beforeData.count)
+  })
+
+  it('returns 401 when accessing without auth', async () => {
+    const response = await fetch('/api/link/count')
+
+    expect(response.status).toBe(401)
+  })
+})
+
 describe.sequential('/api/link/search', () => {
   it('returns link array with valid auth', async () => {
     const response = await fetchWithAuth('/api/link/search')
