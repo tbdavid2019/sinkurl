@@ -6,6 +6,29 @@
 
 ## 📅 [2026-07-03]
 
+### 📌 2. Site SEO / OG Meta 改為後台可設定
+
+### ✅ 變更內容
+原本全站 `title`、`description`、`og:title`、`og:site_name`、`og:description`、`og:image`、Twitter card 等資訊只吃 `app/app.config.ts` 的硬編碼 fallback，導致部署後無法由使用者自行修改。
+
+本次新增：
+
+* `SeoSettingsSchema`，管理 Site Title、Description、OG Image、OG Site Name。
+* `GET /api/public/settings/seo`，供前台 runtime 讀取 SEO/OG 設定。
+* `POST /api/settings/seo`，供後台儲存 SEO/OG 設定。
+* `Dashboard -> Settings -> Site SEO` 設定頁。
+* `app/app.vue` 改為優先讀 KV 設定，空值才 fallback 到 `app.config.ts`。
+* 移除首頁 `/` 的 prerender，避免 crawler 讀到 build-time 固化的舊 OG meta。
+
+### 💡 使用方式
+進入後台：
+
+`Dashboard -> Settings -> Site SEO`
+
+填入 Site Title、Description、OG / Twitter Image URL、OG Site Name 後儲存即可。
+
+---
+
 ### 📌 1. Transition Page 新增 GA4、Meta Pixel 與 LINE LIFF 登入追蹤
 
 ### ✅ 變更內容

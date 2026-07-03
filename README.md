@@ -259,7 +259,26 @@ NUXT_SITE_TOKEN="您的自訂密碼"
 
 ## 🛠️ 首頁與網站資訊自訂方式 (包含網站標題 `glsoft.ai` 來源)
 
-本專案的網頁標題、頁首、頁尾以及網站 Meta 資訊皆採用集中式設定。**如果您在網站各處（如瀏覽器分頁標題、頁首或頁尾左側）看到預設的 `glsoft.ai` 或公司版權資訊，這就是設定的來源。**
+本專案的網頁標題、OG / Twitter 分享卡片資訊可在後台設定，不需要改程式碼。
+
+進入後台：
+
+`Dashboard -> Settings -> Site SEO`
+
+可設定：
+
+- **Site Title**：網站標題，會用於 `<title>`、`og:title`、`twitter:title`。
+- **Description**：網站描述，會用於 `description`、`og:description`、`twitter:description`。
+- **OG / Twitter Image URL**：分享卡片圖片，會用於 `og:image`、`twitter:image`。
+- **OG Site Name**：會用於 `og:site_name`；留空時使用 Site Title。
+
+如果後台未設定，系統才會 fallback 到 [app/app.config.ts](file:///Users/david/Documents/git/tbdavid2019/Sink/app/app.config.ts) 的預設值。
+
+**注意**：首頁 `/` 已改為 runtime SSR 回應，避免社群 crawler 只讀到 build-time 的舊 OG meta。
+
+### 靜態 fallback 設定
+
+如果您在網站各處（如瀏覽器分頁標題、頁首或頁尾左側）看到預設的 `glsoft.ai` 或公司版權資訊，這是 fallback 設定的來源。
 
 若要更改首頁顯示的文字、網站標題與公司資訊，請直接修改 [app/app.config.ts](file:///Users/david/Documents/git/tbdavid2019/Sink/app/app.config.ts) 檔案。
 
