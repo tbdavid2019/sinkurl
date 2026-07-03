@@ -275,6 +275,16 @@ NUXT_SITE_TOKEN="您的自訂密碼"
 
 **注意**：首頁 `/` 已改為 runtime SSR 回應，避免社群 crawler 只讀到 build-time 的舊 OG meta。
 
+### 短網址分享預覽
+
+短網址本身是 redirect response，一般瀏覽器打開時會直接跳轉；但 LINE、Facebook、Twitter、Slack、Discord、Telegram 等社群預覽 crawler 需要讀到 HTML meta 才能產生預覽卡片。
+
+當社群 crawler 讀取 `https://your-domain/{slug}` 時，系統會回傳一個只包含 OG / Twitter meta 的 HTML：
+
+1. 優先使用該短連結自己的 `title`、`description`、`image`。
+2. 如果短連結沒有填，fallback 到 `Dashboard -> Settings -> Site SEO`。
+3. 一般使用者點擊短網址時仍照常 redirect，不會停在 OG 頁。
+
 ### 靜態 fallback 設定
 
 如果您在網站各處（如瀏覽器分頁標題、頁首或頁尾左側）看到預設的 `glsoft.ai` 或公司版權資訊，這是 fallback 設定的來源。

@@ -1,6 +1,6 @@
 import type { LinkSchema } from '@@/schemas/link'
 import type { z } from 'zod'
-import { TrackingSettingsSchema, TransitionSettingsSchema } from '@@/schemas/settings'
+import { SeoSettingsSchema, TrackingSettingsSchema, TransitionSettingsSchema } from '@@/schemas/settings'
 import { parsePath, withQuery } from 'ufo'
 
 function escapeHtml(value: string) {
@@ -10,6 +10,54 @@ function escapeHtml(value: string) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;')
+}
+
+function isSocialPreviewCrawler(userAgent: string) {
+  return /facebookexternalhit|facebot|twitterbot|slackbot|discordbot|telegrambot|whatsapp|linkedinbot|pinterest|skypeuripreview|line/i.test(userAgent)
+}
+
+function renderSocialPreviewHtml(params: {
+  title: string
+  description: string
+  image: string
+  siteName: string
+  url: string
+  target: string
+}) {
+  const title = escapeHtml(params.title)
+  const description = escapeHtml(params.description)
+  const image = escapeHtml(params.image)
+  const siteName = escapeHtml(params.siteName)
+  const url = escapeHtml(params.url)
+  const target = escapeHtml(params.target)
+  const twitterCard = image ? 'summary_large_image' : 'summary'
+  const imageMeta = image
+    ? `<meta property="og:image" content="${image}">
+  <meta name="twitter:image" content="${image}">`
+    : ''
+
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>${title}</title>
+  <link rel="canonical" href="${url}">
+  <meta name="description" content="${description}">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="${title}">
+  <meta property="og:description" content="${description}">
+  <meta property="og:site_name" content="${siteName}">
+  <meta property="og:url" content="${url}">
+  ${imageMeta}
+  <meta name="twitter:card" content="${twitterCard}">
+  <meta name="twitter:title" content="${title}">
+  <meta name="twitter:description" content="${description}">
+</head>
+<body>
+  <p><a href="${target}">${target}</a></p>
+</body>
+</html>`
 }
 
 export default eventHandler(async (event) => {
@@ -48,6 +96,26 @@ export default eventHandler(async (event) => {
         console.error('Failed write access log:', error)
       }
       const target = redirectWithQuery ? withQuery(link.url, getQuery(event)) : link.url
+
+      if (isSocialPreviewCrawler(getHeader(event, 'user-agent') || '')) {
+        const seo = SeoSettingsSchema.parse(await KV.get('setting:seo', { type: 'json' }) || {})
+        const requestURL = getRequestURL(event)
+        const title = link.title || link.comment || seo.title || seo.siteName || slug
+        const description = link.description || link.comment || seo.description || target
+        const image = link.image || seo.image || ''
+        const siteName = seo.siteName || seo.title || requestURL.hostname
+
+        setHeader(event, 'Content-Type', 'text/html; charset=utf-8')
+        setHeader(event, 'Cache-Control', 'public, max-age=300')
+        return renderSocialPreviewHtml({
+          title,
+          description,
+          image,
+          siteName,
+          url: requestURL.href,
+          target,
+        })
+      }
 
       const globalTransition = TransitionSettingsSchema.parse(await KV.get('setting:transition', { type: 'json' }) || {})
       const showTransition = globalTransition.mode === 'force'

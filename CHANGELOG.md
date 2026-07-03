@@ -6,6 +6,20 @@
 
 ## 📅 [2026-07-03]
 
+### 📌 4. 短網址支援 LINE / 社群 Open Graph 預覽
+
+### ✅ 變更內容
+
+短網址 route 原本會直接 301/302 到目的地，因此 LINE、Facebook 等預覽 crawler 讀不到 `og:title`、`og:description`、`og:image`。
+
+本次調整 redirect middleware：
+
+* 一般使用者打開短網址時，仍照原本規則 redirect 或顯示 transition page。
+* 社群預覽 crawler 打開短網址時，回傳 200 HTML，內含 OG / Twitter meta。
+* 短網址自己的 `title`、`description`、`image` 優先於 Site SEO；未填時才 fallback 到 `Dashboard -> Settings -> Site SEO`。
+
+---
+
 ### 📌 3. 修正 Default Transition Mode 會誤開中轉頁
 
 ### ✅ 變更內容
