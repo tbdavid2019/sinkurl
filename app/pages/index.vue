@@ -1,7 +1,35 @@
 <script setup>
 import { marked } from 'marked'
 
-const { company } = useAppConfig()
+const appConfig = useAppConfig()
+const { company } = appConfig
+const { data: seoSettings } = await useFetch('/api/public/settings/seo', {
+  default: () => ({
+    title: '',
+    description: '',
+    image: '',
+    siteName: '',
+  }),
+})
+
+const siteTitle = computed(() => seoSettings.value.title || appConfig.title)
+const siteDescription = computed(() => seoSettings.value.description || appConfig.description)
+const siteImage = computed(() => seoSettings.value.image || appConfig.image)
+const siteName = computed(() => seoSettings.value.siteName || siteTitle.value)
+
+useSeoMeta({
+  title: computed(() => `${siteTitle.value} - ${siteDescription.value}`),
+  description: siteDescription,
+  ogType: 'website',
+  ogTitle: siteTitle,
+  ogSiteName: siteName,
+  ogDescription: siteDescription,
+  ogImage: siteImage,
+  twitterTitle: siteTitle,
+  twitterDescription: siteDescription,
+  twitterImage: siteImage,
+  twitterCard: 'summary_large_image',
+})
 
 definePageMeta({
   layout: false,

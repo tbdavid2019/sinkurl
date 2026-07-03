@@ -1,30 +1,17 @@
 <script setup>
-const appConfig = useAppConfig()
-const { data: seoSettings } = await useFetch('/api/public/settings/seo', {
-  default: () => ({
-    title: '',
-    description: '',
-    image: '',
-    siteName: '',
-  }),
-})
-
-const siteTitle = computed(() => seoSettings.value.title || appConfig.title)
-const siteDescription = computed(() => seoSettings.value.description || appConfig.description)
-const siteImage = computed(() => seoSettings.value.image || appConfig.image)
-const siteName = computed(() => seoSettings.value.siteName || siteTitle.value)
+const { title, description, image } = useAppConfig()
 
 useSeoMeta({
-  title: computed(() => `${siteTitle.value} - ${siteDescription.value}`),
-  description: siteDescription,
+  title: `${title} - ${description}`,
+  description,
   ogType: 'website',
-  ogTitle: siteTitle,
-  ogSiteName: siteName,
-  ogDescription: siteDescription,
-  ogImage: siteImage,
-  twitterTitle: siteTitle,
-  twitterDescription: siteDescription,
-  twitterImage: siteImage,
+  ogTitle: title,
+  ogSiteName: title,
+  ogDescription: description,
+  ogImage: image,
+  twitterTitle: title,
+  twitterDescription: description,
+  twitterImage: image,
   twitterCard: 'summary_large_image',
 })
 
