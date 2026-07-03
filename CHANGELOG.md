@@ -4,6 +4,42 @@
 
 ---
 
+## 📅 [2026-07-03]
+
+### 📌 1. Transition Page 新增 GA4、Meta Pixel 與 LINE LIFF 登入追蹤
+
+### ✅ 變更內容
+中轉頁現在可在跳轉前送出第三方追蹤事件，並支援需要 LINE 身份識別的客戶流程。
+
+本次新增：
+
+* `TrackingSettingsSchema`，管理 GA4、Meta Pixel、LINE LIFF、LINE Channel ID、強制 LINE Login 與跳轉倒數秒數。
+* `GET /api/public/settings/tracking`，供後台與中轉頁讀取追蹤設定。
+* `POST /api/settings/tracking`，供後台儲存追蹤設定。
+* `POST /api/tracking/event`，供中轉頁回報追蹤事件與 LINE ID token。
+* 中轉頁會依設定注入 GA4 `gtag.js`、Meta Pixel、LINE LIFF SDK。
+* LINE LIFF 登入成功後，前端傳送 `liff.getIDToken()`，後端再呼叫 LINE `oauth2/v2.1/verify` 驗證，不直接信任瀏覽器送出的 profile。
+* 中轉頁目的 URL 輸出補上 HTML escaping，避免特殊 URL 破壞頁面結構。
+
+### 💡 使用方式
+進入後台：
+
+`Dashboard -> Settings -> Transition Page -> Tracking Integrations`
+
+可填入：
+
+* **GA4 Measurement ID**：例如 `G-XXXXXXXXXX`。
+* **Meta Pixel ID**：例如 `123456789012345`。
+* **LINE LIFF ID**：例如 `1234567890-AbcdEfgh`。
+* **LINE Channel ID**：LINE Login Channel 的 Channel ID。
+* **Require LINE Login before redirect**：開啟後，訪客需完成 LINE LIFF / LINE Login 授權後才會繼續跳轉。
+* **Redirect Delay Seconds**：中轉頁自動跳轉倒數秒數。
+
+### 🔍 補充說明
+第三方像素追蹤只會在顯示 Transition Page 時執行；如果短網址直接 302 跳轉，瀏覽器不會執行 GA、Meta 或 LIFF SDK。需要 LINE 身份識別的客戶，請在 LINE Developers Console 的 LIFF app scopes 開啟 `openid`，需要基本 profile 時再加 `profile`。
+
+---
+
 ## 📅 [2026-06-29]
 
 ### 📌 1. Dashboard Links 頁面新增短網址總數顯示

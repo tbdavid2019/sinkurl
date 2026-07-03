@@ -21,3 +21,13 @@ export const TransitionSettingsSchema = z.object({
     content,
   }
 })
+
+export const TrackingSettingsSchema = z.object({
+  enabled: z.boolean().default(false),
+  gaMeasurementId: z.string().trim().max(32).default(''),
+  metaPixelId: z.string().trim().max(32).default(''),
+  lineLiffId: z.string().trim().max(64).default(''),
+  lineChannelId: z.string().trim().max(32).default(''),
+  requireLineLogin: z.boolean().default(false),
+  redirectDelaySeconds: z.number().int().min(1).max(30).default(5),
+})

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 import { fetch, fetchWithAuth } from './utils'
 
 function uniqueSlug(prefix: string) {
@@ -6,6 +6,18 @@ function uniqueSlug(prefix: string) {
 }
 
 describe.sequential('transition redirect behavior', () => {
+  beforeEach(async () => {
+    await fetchWithAuth('/api/settings/tracking', {
+      method: 'POST',
+      body: JSON.stringify({
+        enabled: false,
+      }),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+  })
+
   it('shows the transition page when a link explicitly enables it', async () => {
     const slug = uniqueSlug('transition-on')
 
@@ -109,5 +121,61 @@ describe.sequential('transition redirect behavior', () => {
     expect(response.status).toBe(200)
     expect(response.headers.get('content-type')).toContain('text/html')
     expect(await response.text()).toContain('forced transition')
+  })
+
+  it('injects tracking integrations on the transition page', async () => {
+    const slug = uniqueSlug('transition-tracking')
+
+    await fetchWithAuth('/api/settings/transition', {
+      method: 'POST',
+      body: JSON.stringify({
+        mode: 'disabled',
+        content: '',
+      }),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+
+    await fetchWithAuth('/api/settings/tracking', {
+      method: 'POST',
+      body: JSON.stringify({
+        enabled: true,
+        gaMeasurementId: 'G-TEST1234',
+        metaPixelId: '1234567890',
+        lineLiffId: '1234567890-AbcdEfgh',
+        lineChannelId: '1234567890',
+        requireLineLogin: true,
+        redirectDelaySeconds: 3,
+      }),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+
+    const createResponse = await fetchWithAuth('/api/link/create', {
+      method: 'POST',
+      body: JSON.stringify({
+        url: 'https://example.com/tracked',
+        slug,
+        transitionMode: 'on',
+      }),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+
+    expect(createResponse.status).toBe(201)
+
+    const response = await fetch(`/${slug}`, { redirect: 'manual' })
+    const html = await response.text()
+
+    expect(response.status).toBe(200)
+    expect(html).toContain('https://www.googletagmanager.com/gtag/js?id=G-TEST1234')
+    expect(html).toContain('https://connect.facebook.net/en_US/fbevents.js')
+    expect(html).toContain('https://static.line-scdn.net/liff/edge/2/sdk.js')
+    expect(html).toContain('/api/tracking/event')
+    expect(html).toContain('"requireLineLogin":true')
+    expect(html).toContain('"redirectDelaySeconds":3')
   })
 })

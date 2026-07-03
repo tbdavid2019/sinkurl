@@ -16,7 +16,17 @@ const loadingTransition = ref(false)
 const transitionEnabled = computed(() => transitionMode.value !== 'disabled')
 const transitionModeOptions = TransitionModeSchema.options
 
-const loading = computed(() => loadingEnterprise.value || loadingTransition.value)
+// Tracking settings
+const trackingEnabled = ref(false)
+const gaMeasurementId = ref('')
+const metaPixelId = ref('')
+const lineLiffId = ref('')
+const lineChannelId = ref('')
+const requireLineLogin = ref(false)
+const redirectDelaySeconds = ref(5)
+const loadingTracking = ref(false)
+
+const loading = computed(() => loadingEnterprise.value || loadingTransition.value || loadingTracking.value)
 
 async function fetchEnterpriseSettings() {
   loadingEnterprise.value = true
@@ -73,14 +83,48 @@ async function fetchTransitionSettings() {
   }
 }
 
+async function fetchTrackingSettings() {
+  loadingTracking.value = true
+  try {
+    const data = await useAPI('/api/public/settings/tracking')
+    trackingEnabled.value = data?.enabled || false
+    gaMeasurementId.value = data?.gaMeasurementId || ''
+    metaPixelId.value = data?.metaPixelId || ''
+    lineLiffId.value = data?.lineLiffId || ''
+    lineChannelId.value = data?.lineChannelId || ''
+    requireLineLogin.value = data?.requireLineLogin || false
+    redirectDelaySeconds.value = data?.redirectDelaySeconds || 5
+  }
+  catch (error) {
+    console.error('Failed to fetch tracking settings:', error)
+    toast.error('Failed to load tracking settings')
+  }
+  finally {
+    loadingTracking.value = false
+  }
+}
+
 async function saveTransitionSettings() {
   loadingTransition.value = true
+  loadingTracking.value = true
   try {
     await useAPI('/api/settings/transition', {
       method: 'POST',
       body: {
         mode: transitionMode.value,
         content: transitionContent.value,
+      },
+    })
+    await useAPI('/api/settings/tracking', {
+      method: 'POST',
+      body: {
+        enabled: trackingEnabled.value,
+        gaMeasurementId: gaMeasurementId.value,
+        metaPixelId: metaPixelId.value,
+        lineLiffId: lineLiffId.value,
+        lineChannelId: lineChannelId.value,
+        requireLineLogin: requireLineLogin.value,
+        redirectDelaySeconds: Number(redirectDelaySeconds.value || 5),
       },
     })
     toast.success('Transition settings saved successfully')
@@ -91,6 +135,7 @@ async function saveTransitionSettings() {
   }
   finally {
     loadingTransition.value = false
+    loadingTracking.value = false
   }
 }
 
@@ -115,6 +160,7 @@ const previewTransitionHtml = computed(() => {
 onMounted(() => {
   fetchEnterpriseSettings()
   fetchTransitionSettings()
+  fetchTrackingSettings()
 })
 </script>
 
@@ -470,6 +516,184 @@ onMounted(() => {
                     Force All Links
                   </option>
                 </select>
+              </div>
+
+              <div
+                class="
+                  space-y-4 rounded-xl border border-zinc-100 bg-zinc-50 p-4
+                  dark:border-zinc-800 dark:bg-zinc-950
+                "
+              >
+                <div
+                  class="flex items-center justify-between gap-4"
+                >
+                  <div class="space-y-0.5">
+                    <label
+                      for="enable-tracking" class="
+                        cursor-pointer text-sm font-semibold tracking-wide
+                      "
+                    >Tracking Integrations</label>
+                    <p
+                      class="
+                        text-xs text-zinc-500
+                        dark:text-zinc-400
+                      "
+                    >
+                      Send transition page behavior to GA4, Meta Pixel, and optional LINE LIFF login verification.
+                    </p>
+                  </div>
+                  <button
+                    id="enable-tracking"
+                    type="button"
+                    role="switch"
+                    :aria-checked="trackingEnabled"
+                    :disabled="loading"
+                    class="
+                      relative inline-flex h-6 w-11 shrink-0 cursor-pointer
+                      rounded-full border-2 border-transparent transition-colors
+                      duration-200 ease-in-out
+                      focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2
+                      focus:outline-none
+                      disabled:cursor-not-allowed disabled:opacity-50
+                    "
+                    :class="trackingEnabled ? `
+                      bg-emerald-500
+                      dark:bg-emerald-600
+                    ` : `
+                      bg-zinc-200
+                      dark:bg-zinc-800
+                    `"
+                    @click="trackingEnabled = !trackingEnabled"
+                  >
+                    <span
+                      aria-hidden="true"
+                      class="
+                        pointer-events-none inline-block h-5 w-5 transform
+                        rounded-full bg-white shadow ring-0 transition
+                        duration-200 ease-in-out
+                      "
+                      :class="trackingEnabled ? 'translate-x-5' : `
+                        translate-x-0
+                      `"
+                    />
+                  </button>
+                </div>
+
+                <div
+                  class="
+                    grid grid-cols-1 gap-3
+                    md:grid-cols-2
+                  "
+                >
+                  <div class="space-y-2">
+                    <label class="text-xs font-semibold tracking-wide">GA4 Measurement ID</label>
+                    <input
+                      v-model="gaMeasurementId"
+                      type="text"
+                      class="
+                        w-full rounded-xl border border-zinc-200 bg-white p-3
+                        text-sm
+                        focus:border-emerald-500 focus:ring-2
+                        focus:ring-emerald-500 focus:outline-none
+                        dark:border-zinc-800 dark:bg-zinc-900
+                      "
+                      placeholder="G-XXXXXXXXXX"
+                      :disabled="loading || !trackingEnabled"
+                    >
+                  </div>
+
+                  <div class="space-y-2">
+                    <label class="text-xs font-semibold tracking-wide">Meta Pixel ID</label>
+                    <input
+                      v-model="metaPixelId"
+                      type="text"
+                      class="
+                        w-full rounded-xl border border-zinc-200 bg-white p-3
+                        text-sm
+                        focus:border-emerald-500 focus:ring-2
+                        focus:ring-emerald-500 focus:outline-none
+                        dark:border-zinc-800 dark:bg-zinc-900
+                      "
+                      placeholder="123456789012345"
+                      :disabled="loading || !trackingEnabled"
+                    >
+                  </div>
+
+                  <div class="space-y-2">
+                    <label class="text-xs font-semibold tracking-wide">LINE LIFF ID</label>
+                    <input
+                      v-model="lineLiffId"
+                      type="text"
+                      class="
+                        w-full rounded-xl border border-zinc-200 bg-white p-3
+                        text-sm
+                        focus:border-emerald-500 focus:ring-2
+                        focus:ring-emerald-500 focus:outline-none
+                        dark:border-zinc-800 dark:bg-zinc-900
+                      "
+                      placeholder="1234567890-AbcdEfgh"
+                      :disabled="loading || !trackingEnabled"
+                    >
+                  </div>
+
+                  <div class="space-y-2">
+                    <label class="text-xs font-semibold tracking-wide">LINE Channel ID</label>
+                    <input
+                      v-model="lineChannelId"
+                      type="text"
+                      class="
+                        w-full rounded-xl border border-zinc-200 bg-white p-3
+                        text-sm
+                        focus:border-emerald-500 focus:ring-2
+                        focus:ring-emerald-500 focus:outline-none
+                        dark:border-zinc-800 dark:bg-zinc-900
+                      "
+                      placeholder="1234567890"
+                      :disabled="loading || !trackingEnabled"
+                    >
+                  </div>
+                </div>
+
+                <div
+                  class="
+                    grid grid-cols-1 gap-3
+                    md:grid-cols-2
+                  "
+                >
+                  <label
+                    class="
+                      flex items-center gap-3 rounded-xl border border-zinc-200
+                      bg-white p-3 text-sm
+                      dark:border-zinc-800 dark:bg-zinc-900
+                    "
+                  >
+                    <input
+                      v-model="requireLineLogin"
+                      type="checkbox"
+                      class="h-4 w-4 rounded border-zinc-300 text-emerald-500"
+                      :disabled="loading || !trackingEnabled || !lineLiffId"
+                    >
+                    <span class="font-medium">Require LINE Login before redirect</span>
+                  </label>
+
+                  <div class="space-y-2">
+                    <label class="text-xs font-semibold tracking-wide">Redirect Delay Seconds</label>
+                    <input
+                      v-model.number="redirectDelaySeconds"
+                      type="number"
+                      min="1"
+                      max="30"
+                      class="
+                        w-full rounded-xl border border-zinc-200 bg-white p-3
+                        text-sm
+                        focus:border-emerald-500 focus:ring-2
+                        focus:ring-emerald-500 focus:outline-none
+                        dark:border-zinc-800 dark:bg-zinc-900
+                      "
+                      :disabled="loading"
+                    >
+                  </div>
+                </div>
               </div>
 
               <!-- HTML/Markdown Editor Field -->

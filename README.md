@@ -135,6 +135,45 @@ Transition Page 是短連結在真正跳轉前的中介頁。它適合拿來放�
 
 再次打開短連結時，應該就會反映最新設定，不需要再等舊快取過期。
 
+### 6. GA4 / Meta Pixel / LINE LIFF 追蹤設定
+
+Transition Page 也支援在跳轉前送出追蹤事件。進入後台：
+
+`Dashboard -> Settings -> Transition Page -> Tracking Integrations`
+
+可設定下列欄位：
+
+- **Tracking Integrations**：啟用或停用中轉頁追蹤。
+- **GA4 Measurement ID**：填入 Google Analytics 4 Measurement ID，例如 `G-XXXXXXXXXX`。
+- **Meta Pixel ID**：填入 Meta Pixel ID，例如 `123456789012345`。
+- **LINE LIFF ID**：填入 LINE Developers Console 產生的 LIFF ID，例如 `1234567890-AbcdEfgh`。
+- **LINE Channel ID**：填入同一個 LINE Login Channel 的 Channel ID，用於後端驗證 ID token。
+- **Require LINE Login before redirect**：開啟後，訪客會先進入 LINE LIFF / LINE Login 授權流程，登入完成才繼續跳轉。
+- **Redirect Delay Seconds**：中轉頁自動跳轉倒數秒數，範圍為 1 到 30 秒。
+
+目前會送出的事件包含：
+
+- `transition_view`：訪客看到中轉頁。
+- `redirect_auto`：倒數結束後自動跳轉。
+- `redirect_now`：訪客點擊立即跳轉。
+- `redirect_stopped`：訪客停止自動跳轉。
+- `line_login_success`：LIFF 登入完成且取得 ID token。
+- `line_login_error`：LIFF 初始化或登入流程失敗。
+
+GA4 會透過 `gtag('event', ...)` 送出事件；Meta Pixel 會送出 `ShortlinkRedirect` 自訂事件；LINE LIFF 登入成功後，前端只會把 `liff.getIDToken()` 傳到後端，由後端呼叫 LINE `https://api.line.me/oauth2/v2.1/verify` 驗證，避免直接信任瀏覽器送來的 user profile。
+
+#### LINE LIFF 設定注意事項
+
+在 LINE Developers Console 建立或編輯 LIFF app 時：
+
+1. 使用 LINE Login Channel 建立 LIFF app。
+2. Endpoint URL 必須設為本服務的 HTTPS 網域。
+3. Scopes 至少開啟 `openid`；如果客戶需要使用基本 profile 欄位，請同時開啟 `profile`。
+4. 將 LIFF ID 填入後台的 **LINE LIFF ID**。
+5. 將 Channel ID 填入後台的 **LINE Channel ID**。
+
+若未開啟 **Require LINE Login before redirect**，系統只會在使用者已登入 LIFF 時嘗試驗證 LINE ID token；若開啟，未登入訪客會先被導入 LINE 授權流程。
+
 ---
 
 ## ⚙️ 首次部署 Cloudflare Workers 的參數與設定步驟
