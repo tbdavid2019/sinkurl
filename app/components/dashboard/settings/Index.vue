@@ -678,7 +678,7 @@ onMounted(() => {
                       dark:text-zinc-400
                     "
                   >
-                    `Disabled` means no global transition page. `Default` lets each short link use `inherit/on/off`. `Force All Links` ignores per-link opt-out.
+                    `Disabled` keeps global transition off. `Default` shows the transition page only for links set to `on`. `Force All Links` ignores per-link opt-out.
                   </p>
                 </div>
                 <select

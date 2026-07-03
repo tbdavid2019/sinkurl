@@ -87,7 +87,7 @@ Transition Page 是短連結在真正跳轉前的中介頁。它適合拿來放�
 你會看到 **Global Transition Mode**，共有三種模式：
 
 - `Disabled`：全域關閉 transition page。只有個別短連結明確設成 `on` 才會顯示。
-- `Default`：使用各短連結自己的 `inherit / on / off` 設定。
+- `Default`：不全域強制顯示。只有個別短連結明確設成 `on` 才會顯示；`inherit` 會直接跳轉。
 - `Force All Links`：強制所有短連結都先顯示 transition page。
 
 ### 2. 個別短連結設定
@@ -98,7 +98,7 @@ Transition Page 是短連結在真正跳轉前的中介頁。它適合拿來放�
 
 在編輯器裡可設定 **Interstitial Page Mode**：
 
-- `inherit`：跟隨全域設定
+- `inherit`：跟隨全域模式。全域為 `Default` 時直接跳轉；全域為 `Force All Links` 時顯示 transition page。
 - `on`：這個短連結一定顯示 transition page
 - `off`：這個短連結不顯示 transition page
 
@@ -123,8 +123,7 @@ Transition Page 是短連結在真正跳轉前的中介頁。它適合拿來放�
 
 1. 如果全域模式是 `Force All Links`，所有短連結都顯示 transition page。
 2. 否則，如果該短連結設為 `on`，就顯示 transition page。
-3. 否則，如果該短連結不是 `off`，且全域模式是 `Default`，就顯示 transition page。
-4. 其他情況直接跳轉。
+3. 其他情況直接跳轉。也就是說，全域 `Default` + 短連結 `inherit` 不會顯示 transition page。
 
 ### 5. 設定何時會生效
 

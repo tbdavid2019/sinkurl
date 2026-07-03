@@ -88,6 +88,41 @@ describe.sequential('transition redirect behavior', () => {
     expect(response.headers.get('location')).toBe('https://example.com/direct')
   })
 
+  it('redirects directly for inherited links when global mode is default', async () => {
+    const slug = uniqueSlug('transition-inherit-default')
+
+    await fetchWithAuth('/api/settings/transition', {
+      method: 'POST',
+      body: JSON.stringify({
+        mode: 'inherit',
+        content: '<p>global transition</p>',
+      }),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+
+    const createResponse = await fetchWithAuth('/api/link/create', {
+      method: 'POST',
+      body: JSON.stringify({
+        url: 'https://example.com/inherit-default',
+        slug,
+        transitionMode: 'inherit',
+      }),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+
+    expect(createResponse.status).toBe(201)
+
+    const response = await fetch(`/${slug}`, { redirect: 'manual' })
+
+    expect(response.status).toBeGreaterThanOrEqual(300)
+    expect(response.status).toBeLessThan(400)
+    expect(response.headers.get('location')).toBe('https://example.com/inherit-default')
+  })
+
   it('forces the transition page for all links when global mode is force', async () => {
     const slug = uniqueSlug('transition-force')
 

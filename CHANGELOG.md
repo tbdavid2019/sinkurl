@@ -6,6 +6,20 @@
 
 ## 📅 [2026-07-03]
 
+### 📌 3. 修正 Default Transition Mode 會誤開中轉頁
+
+### ✅ 變更內容
+
+修正 **Global Transition Mode = Default** 的 redirect 判斷：
+
+* 短連結明確設為 `on` 時，才顯示 transition page。
+* 短連結為 `inherit` 或未設定 transition mode 時，直接跳轉。
+* 全域 `Force All Links` 仍會強制所有短連結顯示 transition page。
+
+本次也補上測試，覆蓋 `Default` + link `inherit` 必須直接跳轉的行為，並更新後台與 README 文案。
+
+---
+
 ### 📌 2. Site SEO / OG Meta 改為後台可設定
 
 ### ✅ 變更內容
@@ -96,7 +110,7 @@
 Transition Page 的全域設定由原本單純的開關，調整為三種模式：
 
 * `Disabled`：全域不啟用 transition page。
-* `Default`：依各短連結自己的 `inherit / on / off` 設定決定是否顯示。
+* `Default`：不全域強制顯示；只有短連結明確設為 `on` 才會顯示。
 * `Force All Links`：強制所有短連結都先進入 transition page，不接受個別短連結關閉。
 
 ### 💡 使用方式

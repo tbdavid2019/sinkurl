@@ -52,7 +52,6 @@ export default eventHandler(async (event) => {
       const globalTransition = TransitionSettingsSchema.parse(await KV.get('setting:transition', { type: 'json' }) || {})
       const showTransition = globalTransition.mode === 'force'
         || link.transitionMode === 'on'
-        || (link.transitionMode !== 'off' && globalTransition.mode === 'inherit')
 
       if (showTransition) {
         const transitionContent = link.transitionHtml || globalTransition.content

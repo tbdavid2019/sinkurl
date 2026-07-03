@@ -56,7 +56,7 @@ const fieldConfig = {
     },
     transitionMode: {
       label: 'Interstitial Page Mode',
-      description: 'Choose whether to show the transition/warning page. "Inherit" uses the global settings.',
+      description: 'Choose whether this link shows the transition/warning page. "Inherit" follows the global mode; Default redirects directly, Force All Links still shows it.',
     },
     transitionHtml: {
       component: 'textarea',
