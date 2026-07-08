@@ -16,6 +16,10 @@ function isSocialPreviewCrawler(userAgent: string) {
   return /facebookexternalhit|facebot|twitterbot|slackbot|discordbot|telegrambot|whatsapp|linkedinbot|pinterest|skypeuripreview|line/i.test(userAgent)
 }
 
+function isGeneralBot(userAgent: string) {
+  return /googlebot|bingbot|yandexbot|duckduckbot|baiduspider|sogou|yahoo|ia_archiver|bot|crawler|spider/i.test(userAgent)
+}
+
 function renderSocialPreviewHtml(params: {
   title: string
   description: string
@@ -41,6 +45,7 @@ function renderSocialPreviewHtml(params: {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
   <title>${title}</title>
   <link rel="canonical" href="${url}">
   <meta name="description" content="${description}">
@@ -96,8 +101,9 @@ export default eventHandler(async (event) => {
         console.error('Failed write access log:', error)
       }
       const target = redirectWithQuery ? withQuery(link.url, getQuery(event)) : link.url
+      const userAgent = getHeader(event, 'user-agent') || ''
 
-      if (isSocialPreviewCrawler(getHeader(event, 'user-agent') || '')) {
+      if (isSocialPreviewCrawler(userAgent)) {
         const seo = SeoSettingsSchema.parse(await KV.get('setting:seo', { type: 'json' }) || {})
         const requestURL = getRequestURL(event)
         const title = link.title || link.comment || seo.title || seo.siteName || slug
@@ -115,6 +121,10 @@ export default eventHandler(async (event) => {
           url: requestURL.href,
           target,
         })
+      }
+      else if (isGeneralBot(userAgent)) {
+        setHeader(event, 'X-Robots-Tag', 'noindex, nofollow')
+        return sendRedirect(event, target, +useRuntimeConfig(event).redirectStatusCode)
       }
 
       const globalTransition = TransitionSettingsSchema.parse(await KV.get('setting:transition', { type: 'json' }) || {})
@@ -141,12 +151,14 @@ export default eventHandler(async (event) => {
           `
 
         setHeader(event, 'Content-Type', 'text/html; charset=utf-8')
+        setHeader(event, 'X-Robots-Tag', 'noindex, nofollow')
         return `
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
   <title>Redirecting... | Sink</title>
   ${tracking.enabled && tracking.gaMeasurementId
     ? `<script async src="https://www.googletagmanager.com/gtag/js?id=${escapeHtml(tracking.gaMeasurementId)}"></script>
@@ -290,6 +302,9 @@ export default eventHandler(async (event) => {
     }
 
     async function prepareLineLogin() {
+      const isTargetLiff = target.indexOf('liff.line.me') !== -1 || target.startsWith('line://');
+      if (isTargetLiff) return;
+
       if (!trackingConfig.enabled || !trackingConfig.lineLiffId || !window.liff) return;
 
       try {
@@ -316,7 +331,9 @@ export default eventHandler(async (event) => {
       if (countdown <= 0) {
         clearInterval(timer);
         await trackEvent('redirect_auto');
-        window.location.href = target;
+        setTimeout(() => {
+          window.location.replace(target);
+        }, 150);
       }
       }, 1000);
     }
@@ -325,7 +342,9 @@ export default eventHandler(async (event) => {
       if (event) event.preventDefault();
       clearInterval(timer);
       await trackEvent('redirect_now');
-      window.location.href = target;
+      setTimeout(() => {
+        window.location.replace(target);
+      }, 150);
     }
 
     function stopRedirect() {

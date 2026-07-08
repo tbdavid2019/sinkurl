@@ -4,6 +4,25 @@
 
 ---
 
+## 📅 [2026-07-08]
+
+### 📌 5. 最佳化中轉頁跳轉與追蹤時序、防止 SEO 被索引與重複 LIFF 跳轉
+
+### ✅ 變更內容
+
+為了解決中轉頁（Transition Page）在追蹤與跳轉時的體驗與合規性問題，進行了以下調整：
+
+* **爬蟲與 SEO 最佳化**：
+  * 新增 `isGeneralBot` 用於過濾搜尋引擎爬蟲（如 `Googlebot`、`Bingbot` 等），搜尋引擎爬蟲將繞過中轉頁直接執行 302 重導向，防止資源浪費。
+  * 社交預覽爬蟲與中轉頁面均新增 `<meta name="robots" content="noindex, nofollow">` 以及 `X-Robots-Tag: noindex, nofollow` 回應標頭，防止短網址頁面被搜尋引擎索引而稀釋目標網址的 SEO。
+* **解決「回上一頁無限迴圈（Back Button Trap）」與「追蹤被取消」問題**：
+  * 轉址方式從 `window.location.href = target` 改為 `window.location.replace(target)`，避免中轉頁殘留在歷史紀錄中導致使用者點擊回上一頁時卡死。
+  * 對於自動跳轉（`redirect_auto`）與點擊跳轉（`redirect_now`），在執行 `location.replace` 前引進了 150ms 延遲，以確保 GA4 (`gtag`) 和 Meta Pixel (`fbq`) 等非同步第三方 SDK 在頁面卸載（unload）前有足夠的時間完成發送。
+* **避免 LINE/LIFF 雙重登入跳轉**：
+  * 中轉頁初始化 LIFF SDK 前會先檢查 Target URL。若 Target URL 本身就是 LIFF 連結（包含 `liff.line.me` 或 `line://` 協定），中轉頁將跳過 LIFF 認證，避免重複授權造成的白畫面與延遲。
+
+---
+
 ## 📅 [2026-07-03]
 
 ### 📌 4. 短網址支援 LINE / 社群 Open Graph 預覽
