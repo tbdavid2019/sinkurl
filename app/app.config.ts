@@ -6,7 +6,7 @@ export default defineAppConfig({
   telegram: 'https://t.me/a6a7a8a9abc',
   discord: 'https://discord.gg/9BCGcgCWpj',
   blog: 'https://blog.david888.com',
-  description: 'Sink - 快速短網址服務，支援自訂短網址、訪問分析與團隊管理',
+  description: '短網址',
   image: '/banner.png',
   company: {
     name: '資旅軟體開發有限公司',
