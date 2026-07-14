@@ -124,7 +124,7 @@ onMounted(async () => {
           dark:text-gray-100
         "
       >
-        {{ company?.name || siteTitle }}
+        {{ siteTitle }}
       </h1>
       <div
         class="
