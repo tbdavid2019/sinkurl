@@ -4,6 +4,31 @@
 
 ---
 
+## 📅 [2026-07-14]
+
+### 📌 6. 修正全站 OG / SEO Meta 標籤與社群預覽圖
+
+### ✅ 變更內容
+
+修復 OG 分數 37/100 的多項 SEO 問題，包含社群預覽與搜尋引擎索引最佳化：
+
+* **修正 OG Image 過小問題**：預設 OG 圖片從 `https://blog.david888.com/banner.png` (404) 改為 `/banner.png` (本地 2400×1260px，部署於 `https://glsoft.ai/banner.png`)；Dashboard 後台設定的 OG Image 若指向 SVG logo (94×23px) 需手動更新。
+* **補齊遺漏的 OG / Twitter 標籤**：`og:url`、`og:locale` (zh_TW)、`og:image:width` (1200)、`og:image:height` (630)、`og:image:alt`、`twitter:site` (@oobwei)，同時寫入 `app/app.vue` 與 `app/pages/index.vue`。
+* **新增 SEO 實用標籤**：`<link rel="canonical">`、`<link rel="manifest">`、`<meta name="theme-color">` (#10b981)、32×32 PNG favicon、SVG favicon、JSON-LD 結構化資料 (WebSite Schema)。
+* **修正預設 Description 過長**：`app/app.config.ts` description 從 `'短網址'` 改為完整描述 (`'Sink - 快速短網址服務，支援自訂短網址、訪問分析與團隊管理'`)，Dashboard 後台設定若仍為舊值需手動更新。
+* **Loading 狀態補上 H1**：首頁載入中狀態新增 `<h1>` 標籤，讓搜尋引擎爬蟲能讀到頁面主題。
+
+### 💡 部署後手動設定
+部署後請進入 `Dashboard -> Settings -> Site SEO`，確認以下欄位：
+
+* **OG Image URL** → `https://glsoft.ai/banner.png`
+* **Description** → 建議 110–160 字元的簡短描述
+* **Site Title** → 建議 `glsoft.ai` 或 `Sink`
+
+---
+
+
+
 ## 📅 [2026-07-08]
 
 ### 📌 5. 最佳化中轉頁跳轉與追蹤時序、防止 SEO 被索引與重複 LIFF 跳轉

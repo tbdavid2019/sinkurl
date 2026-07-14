@@ -6,8 +6,8 @@ export default defineAppConfig({
   telegram: 'https://t.me/a6a7a8a9abc',
   discord: 'https://discord.gg/9BCGcgCWpj',
   blog: 'https://blog.david888.com',
-  description: '短網址',
-  image: 'https://blog.david888.com/banner.png',
+  description: 'Sink - 快速短網址服務，支援自訂短網址、訪問分析與團隊管理',
+  image: '/banner.png',
   company: {
     name: '資旅軟體開發有限公司',
     nameEnglish: 'glsoft.ai / 維護者信箱 104@david888.com',

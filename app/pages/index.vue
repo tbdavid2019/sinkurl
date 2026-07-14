@@ -16,6 +16,10 @@ const siteTitle = computed(() => seoSettings.value.title || appConfig.title)
 const siteDescription = computed(() => seoSettings.value.description || appConfig.description)
 const siteImage = computed(() => seoSettings.value.image || appConfig.image)
 const siteName = computed(() => seoSettings.value.siteName || siteTitle.value)
+const twitterUsername = computed(() => {
+  const url = appConfig.twitter
+  return url ? url.replace('https://x.com/', '') : ''
+})
 
 useSeoMeta({
   title: computed(() => `${siteTitle.value} - ${siteDescription.value}`),
@@ -25,10 +29,16 @@ useSeoMeta({
   ogSiteName: siteName,
   ogDescription: siteDescription,
   ogImage: siteImage,
+  ogImageWidth: 1200,
+  ogImageHeight: 630,
+  ogImageAlt: siteTitle,
+  ogUrl: 'https://glsoft.ai',
+  ogLocale: 'zh_TW',
   twitterTitle: siteTitle,
   twitterDescription: siteDescription,
   twitterImage: siteImage,
   twitterCard: 'summary_large_image',
+  twitterSite: computed(() => twitterUsername.value ? `@${twitterUsername.value}` : undefined),
 })
 
 definePageMeta({
@@ -54,6 +64,30 @@ useHead({
     }
     return company?.name ? `${company.name} - ${company.nameEnglish || ''}` : 'Company Profile'
   }),
+  meta: [
+    {
+      name: 'theme-color',
+      content: '#10b981',
+    },
+  ],
+  link: [
+    {
+      rel: 'canonical',
+      href: 'https://glsoft.ai',
+    },
+  ],
+  script: [
+    {
+      type: 'application/ld+json',
+      children: JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'WebSite',
+        'name': siteTitle.value,
+        'description': siteDescription.value,
+        'url': 'https://glsoft.ai',
+      }),
+    },
+  ],
 })
 
 onMounted(async () => {
@@ -84,6 +118,14 @@ onMounted(async () => {
     <div
       v-if="loading" class="flex flex-col items-center justify-center space-y-4"
     >
+      <h1
+        class="
+          text-center text-lg font-semibold text-gray-900
+          dark:text-gray-100
+        "
+      >
+        {{ siteTitle }}
+      </h1>
       <div
         class="
           h-8 w-8 animate-spin rounded-full border-4 border-emerald-500
