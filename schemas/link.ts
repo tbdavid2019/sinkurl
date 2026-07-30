@@ -11,6 +11,7 @@ export const LinkSchema = z.object({
   id: z.string().trim().max(26).default(nanoid(10)),
   url: z.string().trim().url().max(2048),
   slug: z.string().trim().max(2048).regex(new RegExp(slugRegex)).default(nanoid()),
+  isCustomSlug: z.boolean().default(false),
   comment: z.string().trim().max(2048).optional(),
   createdAt: z.number().int().safe().default(() => Math.floor(Date.now() / 1000)),
   updatedAt: z.number().int().safe().default(() => Math.floor(Date.now() / 1000)),

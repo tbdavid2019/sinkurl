@@ -69,6 +69,85 @@ describe.sequential('/api/link/create', () => {
     expect(duplicateResponse.status).toBe(409)
   })
 
+  it('reuses a random short link when the destination URL is identical', async () => {
+    const suffix = Math.random().toString(36).slice(2)
+    const url = `https://example.com/reuse-random-short-link-${suffix}`
+
+    const firstResponse = await fetchWithAuth('/api/link/create', {
+      method: 'POST',
+      body: JSON.stringify({
+        url,
+        slug: `reuse-random-first-${suffix}`,
+        isCustomSlug: false,
+      }),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+    expect(firstResponse.status).toBe(201)
+
+    const duplicateResponse = await fetchWithAuth('/api/link/create', {
+      method: 'POST',
+      body: JSON.stringify({
+        url,
+        slug: `reuse-random-second-${suffix}`,
+        isCustomSlug: false,
+      }),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+
+    expect(duplicateResponse.status).toBe(200)
+    await expect(duplicateResponse.json()).resolves.toMatchObject({
+      status: 'existing',
+      link: {
+        slug: `reuse-random-first-${suffix}`,
+        url,
+        isCustomSlug: false,
+      },
+    })
+  })
+
+  it('allows custom slugs to share a destination URL', async () => {
+    const suffix = Math.random().toString(36).slice(2)
+    const url = `https://example.com/shared-custom-short-link-${suffix}`
+
+    const firstResponse = await fetchWithAuth('/api/link/create', {
+      method: 'POST',
+      body: JSON.stringify({
+        url,
+        slug: `shared-custom-first-${suffix}`,
+        isCustomSlug: true,
+      }),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+    expect(firstResponse.status).toBe(201)
+
+    const secondResponse = await fetchWithAuth('/api/link/create', {
+      method: 'POST',
+      body: JSON.stringify({
+        url,
+        slug: `shared-custom-second-${suffix}`,
+        isCustomSlug: true,
+      }),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+
+    expect(secondResponse.status).toBe(201)
+    await expect(secondResponse.json()).resolves.toMatchObject({
+      link: {
+        slug: `shared-custom-second-${suffix}`,
+        url,
+        isCustomSlug: true,
+      },
+    })
+  })
+
   it('returns 401 when accessing without auth', async () => {
     const response = await fetch('/api/link/create', {
       method: 'POST',

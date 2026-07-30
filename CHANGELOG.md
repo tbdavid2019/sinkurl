@@ -4,6 +4,26 @@
 
 ---
 
+## 📅 [2026-07-30]
+
+### 📌 隨機短網址重複使用與歷史資料 migration
+
+### ✅ 變更內容
+
+* 新增 `isCustomSlug` 標記，區分隨機 slug 與自訂 slug。
+* 相同完整目的網址以隨機 slug 建立時，系統會回傳最早建立的既有短網址，不再重複產生新短碼。
+* 手動輸入或 AI 產生的自訂 slug 可繼續指向相同目的網址，不受重複使用規則限制。
+* 新增網址反向索引，並在建立、編輯、刪除及 upsert 時同步維護。
+* 新增 `pnpm migrate:link-index`：將所有無標記歷史連結視為隨機 slug，補上 `isCustomSlug: false` 與網址索引；預設 dry run，需加上 `--apply` 才會寫入 KV。
+
+### 💡 部署前後注意事項
+
+1. 先部署程式碼，再依 README 的指令執行 migration。
+2. migration 使用的 Cloudflare API Token 需具備 `Workers KV Storage Read` 和 `Workers KV Storage Write` 權限。
+3. Cloudflare KV 為最終一致性儲存，migration 寫入後跨地區快取最多可能需要約 60 秒才完全反映。
+
+---
+
 ## 📅 [2026-07-14]
 
 ### 📌 6. 修正全站 OG / SEO Meta 標籤與社群預覽圖

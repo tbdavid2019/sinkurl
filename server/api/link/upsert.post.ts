@@ -1,4 +1,5 @@
 import { LinkSchema } from '@@/schemas/link'
+import { findRandomLinkByUrl, putRandomLinkUrlIndex } from '@@/server/utils/link-index'
 
 export default eventHandler(async (event) => {
   const link = await readValidatedBody(event, LinkSchema.parse)
@@ -10,6 +11,14 @@ export default eventHandler(async (event) => {
 
   const { cloudflare } = event.context
   const { KV } = cloudflare.env
+
+  if (!link.isCustomSlug) {
+    const existingRandomLink = await findRandomLinkByUrl(KV, link.url)
+    if (existingRandomLink) {
+      const shortLink = `${getRequestProtocol(event)}://${getRequestHost(event)}/${existingRandomLink.slug}`
+      return { link: existingRandomLink, shortLink, status: 'existing' }
+    }
+  }
 
   // Check if link exists
   const existingLink = await KV.get(`link:${link.slug}`, { type: 'json' })
@@ -31,6 +40,7 @@ export default eventHandler(async (event) => {
       comment: link.comment,
     },
   })
+  await putRandomLinkUrlIndex(KV, link, expiration)
 
   setResponseStatus(event, 201)
   const shortLink = `${getRequestProtocol(event)}://${getRequestHost(event)}/${link.slug}`

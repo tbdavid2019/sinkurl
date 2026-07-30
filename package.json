@@ -11,6 +11,7 @@
     "build": "NODE_OPTIONS=--max-old-space-size=8192 nuxt build",
     "build:map": "node scripts/build-map.js",
     "build:colo": "node scripts/build-colo.js",
+    "migrate:link-index": "node scripts/migrate-link-url-index.mjs",
     "postinstall": "npm run build:map && nuxt prepare",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",

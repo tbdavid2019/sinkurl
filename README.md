@@ -12,6 +12,7 @@
 - **詳細數據分析**：即時監控連結的點擊次數、地理位置、瀏覽器、作業系統等數據。
 - **Serverless 架構**：100% 運行於 Cloudflare 生態系，部署簡單、運行成本極低且無須管理伺服器。
 - **自訂後綴 (Slug)**：支援自定義短網址後綴，並支援大小寫區分。
+- **隨機短網址重複使用**：相同目的網址再次使用隨機 slug 縮短時，會回傳既有短網址；自訂 slug 則可指向相同目的網址。
 - **AI 智慧後綴**：整合 AI 服務，自動生成具備語意且好記的短網址後綴。
 - **連結過期設定**：支援為特定的短網址設定到期時間，逾期自動失效。
 - **Transition Page**：支援全域或單一短連結顯示中介跳轉頁，可放安全提示、自訂 HTML 或廣告內容。
@@ -66,6 +67,33 @@ pnpm dev
 
 > 💡 **本地開發是如何運行的？**
 > 本地開發時，Wrangler 會在您的電腦中自動**模擬（Emulate）** Cloudflare 運行環境（包含 KV 資料庫與 AI 綁定）。它會將模擬的 KV 資料儲存在專案根目錄下的 `.data`（或 `.wrangler`）資料夾中，因此您不需要連線到線上 Cloudflare 即可在 `http://localhost:3000` 進行完整的短網址新增、查詢及後台測試，且不會影響到您線上的真實數據。
+
+---
+
+## 🔁 隨機短網址重複使用與資料 migration
+
+系統以完整目的網址字串比對重複連結；`https://example.com` 與 `https://example.com/`、不同 query 或 fragment 都視為不同網址。
+
+- 從 Dashboard 按隨機按鈕建立的 slug 會標記為隨機 slug；同一目的網址會回傳最早建立的短網址。
+- 手動輸入或 AI 產生的 slug 會標記為自訂 slug；自訂 slug 可與其他連結共用目的網址。
+
+既有資料沒有這個標記與網址索引。升級後請先以具備 **Workers KV Storage Read** 與 **Workers KV Storage Write** 權限的 Cloudflare API Token 執行 dry run：
+
+```bash
+CLOUDFLARE_ACCOUNT_ID="<account-id>" \
+CLOUDFLARE_API_TOKEN="<kv-read-write-token>" \
+KV_NAMESPACE_ID="<kv-namespace-id>" \
+pnpm migrate:link-index
+```
+
+確認輸出筆數後，加入 `--apply` 才會寫入。migration 會把所有未標記的歷史連結當成隨機 slug、保留其原有 metadata／到期日，並為每個目的網址選擇最早建立的短網址作為重複使用結果。
+
+```bash
+CLOUDFLARE_ACCOUNT_ID="<account-id>" \
+CLOUDFLARE_API_TOKEN="<kv-read-write-token>" \
+KV_NAMESPACE_ID="<kv-namespace-id>" \
+pnpm migrate:link-index -- --apply
+```
 
 ---
 
