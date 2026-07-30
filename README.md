@@ -95,6 +95,12 @@ KV_NAMESPACE_ID="<kv-namespace-id>" \
 pnpm migrate:link-index -- --apply
 ```
 
+若已透過 `pnpm wrangler login` 授權，也可使用 Wrangler 的 OAuth 憑證執行，不需建立或設定 API token：
+
+```bash
+CLOUDFLARE_ACCOUNT_ID="<account-id>" pnpm migrate:link-index -- --wrangler --apply
+```
+
 ---
 
 ## 🧭 Transition Page 用法

@@ -1,7 +1,13 @@
+import { execFile } from 'node:child_process'
 import { createHash } from 'node:crypto'
+import { mkdtemp, rm, writeFile } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { promisify } from 'node:util'
 
 const apiBase = 'https://api.cloudflare.com/client/v4'
+const execFileAsync = promisify(execFile)
 
 function urlIndexKey(url) {
   const hash = createHash('sha256').update(url).digest('hex')
@@ -130,13 +136,93 @@ async function getLinkRecords(accountId, apiToken, namespaceId) {
   return records
 }
 
-async function main() {
-  const accountId = requiredEnv('CLOUDFLARE_ACCOUNT_ID')
-  const apiToken = requiredEnv('CLOUDFLARE_API_TOKEN')
-  const namespaceId = requiredEnv('KV_NAMESPACE_ID')
-  const apply = process.argv.includes('--apply')
+async function runWrangler(accountId, args) {
+  const { stdout } = await execFileAsync(
+    './node_modules/.bin/wrangler',
+    args,
+    {
+      cwd: process.cwd(),
+      env: { ...process.env, CLOUDFLARE_ACCOUNT_ID: accountId },
+    },
+  )
+  return stdout
+}
 
-  const records = await getLinkRecords(accountId, apiToken, namespaceId)
+async function getLinkRecordsViaWrangler(accountId, binding) {
+  const stdout = await runWrangler(accountId, [
+    'kv',
+    'key',
+    'list',
+    '--binding',
+    binding,
+    '--prefix',
+    'link:',
+    '--remote',
+  ])
+  const keys = JSON.parse(stdout)
+  const records = []
+
+  for (const key of keys) {
+    const value = JSON.parse(await runWrangler(accountId, [
+      'kv',
+      'key',
+      'get',
+      key.name,
+      '--binding',
+      binding,
+      '--text',
+      '--remote',
+    ]))
+    records.push({
+      key: key.name,
+      value,
+      ...(key.metadata === undefined ? {} : { metadata: key.metadata }),
+    })
+  }
+
+  return records
+}
+
+async function writeMigrationViaWrangler(accountId, binding, writes) {
+  if (!writes.length)
+    return
+
+  const directory = await mkdtemp(join(tmpdir(), 'sinkurl-link-index-'))
+  const filename = join(directory, 'migration.json')
+  try {
+    await writeFile(filename, JSON.stringify(writes))
+    await runWrangler(accountId, [
+      'kv',
+      'bulk',
+      'put',
+      filename,
+      '--binding',
+      binding,
+      '--remote',
+    ])
+  }
+  finally {
+    await rm(directory, { recursive: true, force: true })
+  }
+}
+
+async function main() {
+  const apply = process.argv.includes('--apply')
+  const useWrangler = process.argv.includes('--wrangler')
+  const binding = process.env.KV_BINDING || 'KV'
+
+  let records
+  if (useWrangler) {
+    const accountId = requiredEnv('CLOUDFLARE_ACCOUNT_ID')
+    records = await getLinkRecordsViaWrangler(accountId, binding)
+  }
+  else {
+    const accountId = requiredEnv('CLOUDFLARE_ACCOUNT_ID')
+    const apiToken = requiredEnv('CLOUDFLARE_API_TOKEN')
+    const namespaceId = requiredEnv('KV_NAMESPACE_ID')
+    records = await getLinkRecords(accountId, apiToken, namespaceId)
+  }
+
   const migration = buildMigrationEntries(records)
 
   console.log(`Scanned ${records.length} link records.`)
@@ -149,14 +235,23 @@ async function main() {
     return
   }
 
-  for (const writeBatch of chunks(migration.writes, 10_000)) {
-    const response = await cloudflareRequest(accountId, apiToken, `/storage/kv/namespaces/${namespaceId}/bulk`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(writeBatch),
-    })
-    if (response.result?.unsuccessful_keys?.length)
-      throw new Error(`Migration could not write: ${response.result.unsuccessful_keys.join(', ')}`)
+  if (useWrangler) {
+    const accountId = requiredEnv('CLOUDFLARE_ACCOUNT_ID')
+    await writeMigrationViaWrangler(accountId, binding, migration.writes)
+  }
+  else {
+    const accountId = requiredEnv('CLOUDFLARE_ACCOUNT_ID')
+    const apiToken = requiredEnv('CLOUDFLARE_API_TOKEN')
+    const namespaceId = requiredEnv('KV_NAMESPACE_ID')
+    for (const writeBatch of chunks(migration.writes, 10_000)) {
+      const response = await cloudflareRequest(accountId, apiToken, `/storage/kv/namespaces/${namespaceId}/bulk`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(writeBatch),
+      })
+      if (response.result?.unsuccessful_keys?.length)
+        throw new Error(`Migration could not write: ${response.result.unsuccessful_keys.join(', ')}`)
+    }
   }
 
   console.log(`Migration complete: wrote ${migration.writes.length} KV records.`)
