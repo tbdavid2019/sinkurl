@@ -72,34 +72,7 @@ pnpm dev
 
 ## 🔁 隨機短網址重複使用與資料 migration
 
-系統以完整目的網址字串比對重複連結；`https://example.com` 與 `https://example.com/`、不同 query 或 fragment 都視為不同網址。
-
-- 從 Dashboard 按隨機按鈕建立的 slug 會標記為隨機 slug；同一目的網址會回傳最早建立的短網址。
-- 手動輸入或 AI 產生的 slug 會標記為自訂 slug；自訂 slug 可與其他連結共用目的網址。
-
-既有資料沒有這個標記與網址索引。升級後請先以具備 **Workers KV Storage Read** 與 **Workers KV Storage Write** 權限的 Cloudflare API Token 執行 dry run：
-
-```bash
-CLOUDFLARE_ACCOUNT_ID="<account-id>" \
-CLOUDFLARE_API_TOKEN="<kv-read-write-token>" \
-KV_NAMESPACE_ID="<kv-namespace-id>" \
-pnpm migrate:link-index
-```
-
-確認輸出筆數後，加入 `--apply` 才會寫入。migration 會把所有未標記的歷史連結當成隨機 slug、保留其原有 metadata／到期日，並為每個目的網址選擇最早建立的短網址作為重複使用結果。
-
-```bash
-CLOUDFLARE_ACCOUNT_ID="<account-id>" \
-CLOUDFLARE_API_TOKEN="<kv-read-write-token>" \
-KV_NAMESPACE_ID="<kv-namespace-id>" \
-pnpm migrate:link-index -- --apply
-```
-
-若已透過 `pnpm wrangler login` 授權，也可使用 Wrangler 的 OAuth 憑證執行，不需建立或設定 API token：
-
-```bash
-CLOUDFLARE_ACCOUNT_ID="<account-id>" pnpm migrate:link-index -- --wrangler --apply
-```
+系統會重複使用相同完整目的網址的隨機短網址；手動或 AI slug 保持獨立。既有站台升級時需要執行一次 KV migration，請依照[隨機短網址重複使用升級教學](docs/deployment/random-link-reuse-upgrade.md)操作。
 
 ---
 

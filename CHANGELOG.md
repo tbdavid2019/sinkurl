@@ -15,6 +15,7 @@
 * 手動輸入或 AI 產生的自訂 slug 可繼續指向相同目的網址，不受重複使用規則限制。
 * 新增網址反向索引，並在建立、編輯、刪除及 upsert 時同步維護。
 * 新增 `pnpm migrate:link-index`：將所有無標記歷史連結視為隨機 slug，補上 `isCustomSlug: false` 與網址索引；預設 dry run，需加上 `--apply` 才會寫入 KV。
+* 升級步驟、驗證方式與回復注意事項請見[隨機短網址重複使用升級教學](docs/deployment/random-link-reuse-upgrade.md)。
 
 ### 💡 部署前後注意事項
 
