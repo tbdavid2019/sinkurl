@@ -105,6 +105,16 @@ export default eventHandler(async (event) => {
 
       if (isSocialPreviewCrawler(userAgent)) {
         const seo = SeoSettingsSchema.parse(await KV.get('setting:seo', { type: 'json' }) || {})
+        const linkOgMode = link.ogMode || 'inherit'
+        const effectiveOgMode = linkOgMode === 'inherit'
+          ? (seo.ogMode || 'custom')
+          : linkOgMode
+
+        if (effectiveOgMode === 'passthrough') {
+          setHeader(event, 'X-Robots-Tag', 'noindex, nofollow')
+          return sendRedirect(event, target, +useRuntimeConfig(event).redirectStatusCode)
+        }
+
         const requestURL = getRequestURL(event)
         const title = link.title || link.comment || seo.title || seo.siteName || slug
         const description = link.description || link.comment || seo.description || target

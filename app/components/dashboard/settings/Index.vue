@@ -8,6 +8,7 @@ const seoTitle = ref('')
 const seoDescription = ref('')
 const seoImage = ref('')
 const seoSiteName = ref('')
+const seoOgMode = ref('custom')
 const loadingSeo = ref(false)
 
 // Enterprise settings
@@ -43,6 +44,7 @@ async function fetchSeoSettings() {
     seoDescription.value = data?.description || ''
     seoImage.value = data?.image || ''
     seoSiteName.value = data?.siteName || ''
+    seoOgMode.value = data?.ogMode || 'custom'
   }
   catch (error) {
     console.error('Failed to fetch SEO settings:', error)
@@ -63,6 +65,7 @@ async function saveSeoSettings() {
         description: seoDescription.value,
         image: seoImage.value,
         siteName: seoSiteName.value,
+        ogMode: seoOgMode.value,
       },
     })
     toast.success('SEO settings saved successfully')
@@ -343,6 +346,33 @@ onMounted(() => {
                 placeholder="https://example.com/og-image.png"
                 :disabled="loading"
               >
+            </div>
+
+            <div
+              class="
+                space-y-2
+                lg:col-span-2
+              "
+            >
+              <label class="text-sm font-semibold tracking-wide">OG Preview Mode (全域社群預覽模式)</label>
+              <select
+                v-model="seoOgMode"
+                class="
+                  w-full rounded-xl border border-zinc-200 bg-zinc-50 p-3
+                  text-sm
+                  focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500
+                  focus:outline-none
+                  dark:border-zinc-800 dark:bg-zinc-950
+                "
+                :disabled="loading"
+              >
+                <option value="custom">
+                  Custom OG (自訂模式：爬蟲存取時回應短網址系統的 OG 標籤與圖片)
+                </option>
+                <option value="passthrough">
+                  Passthrough OG (透通模式：爬蟲存取時直接 302 重導向至目標網址，取得原始 OG)
+                </option>
+              </select>
             </div>
           </CardContent>
 

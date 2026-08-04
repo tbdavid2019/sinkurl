@@ -4,6 +4,22 @@
 
 ---
 
+## 📅 [2026-08-04]
+
+### 📌 新增 OG 預覽透通模式 (Passthrough Mode) 支援
+
+### ✅ 變更內容
+
+* **新增 OG 預覽透通模式 (Passthrough Mode)**：當社群平台預覽爬蟲（Facebook、LINE、X/Twitter、Telegram、Discord 等）存取短網址時，支援選擇「透通模式」，使系統直接回應 302 重定向至原始目標網址，由爬蟲直接讀取目標頁面原始的 Open Graph 預覽資訊。
+* **全域與單一連結獨立設定**：
+  * **全域設定**：於 `Dashboard -> Settings -> Site SEO` 增加「全域社群預覽模式」選擇（`Custom` 自訂模式 或 `Passthrough` 透通模式）。
+  * **單一連結設定**：於 `Dashboard -> Links Editor` 增加「OG Preview Mode」設定，支援 `Inherit` (繼承全域)、`Custom` (強制自訂) 與 `Passthrough` (強制透通)。
+* **Schema 變更**：更新 `SeoSettingsSchema` (`ogMode: 'custom' | 'passthrough'`) 與 `LinkSchema` (`ogMode: 'inherit' | 'custom' | 'passthrough'`)。
+* **重定向中間件更新**：在 `server/middleware/1.redirect.ts` 中新增爬蟲透通邏輯判斷與 302 直轉處理。
+* **測試覆蓋**：於 `tests/redirect.spec.ts` 新增全域及單一連結在透通與自訂模式下的重定向與 HTML 渲染單元測試。
+
+---
+
 ## 📅 [2026-07-30]
 
 ### 📌 隨機短網址重複使用與歷史資料 migration

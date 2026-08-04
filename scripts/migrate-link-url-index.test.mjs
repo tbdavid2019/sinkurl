@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict'
-import test from 'node:test'
+import { it } from 'vitest'
 import { buildMigrationEntries } from './migrate-link-url-index.mjs'
 
-test('marks untagged links as random and indexes the earliest link for each URL', () => {
+it('marks untagged links as random and indexes the earliest link for each URL', () => {
   const result = buildMigrationEntries([
     {
       key: 'link:s9',

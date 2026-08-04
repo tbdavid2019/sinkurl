@@ -282,15 +282,21 @@ NUXT_SITE_TOKEN="您的自訂密碼"
 
 **注意**：首頁 `/` 已改為 runtime SSR 回應，避免社群 crawler 只讀到 build-time 的舊 OG meta。
 
-### 短網址分享預覽
+### 短網址分享預覽與透通模式
 
 短網址本身是 redirect response，一般瀏覽器打開時會直接跳轉；但 LINE、Facebook、Twitter、Slack、Discord、Telegram 等社群預覽 crawler 需要讀到 HTML meta 才能產生預覽卡片。
 
-當社群 crawler 讀取 `https://your-domain/{slug}` 時，系統會回傳一個只包含 OG / Twitter meta 的 HTML：
+系統支援兩種 OG 預覽模式（支援全域預設與單一短網址獨立設定）：
 
-1. 優先使用該短連結自己的 `title`、`description`、`image`。
-2. 如果短連結沒有填，fallback 到 `Dashboard -> Settings -> Site SEO`。
-3. 一般使用者點擊短網址時仍照常 redirect，不會停在 OG 頁。
+- **自訂模式 (`custom`)**：社群 crawler 讀取 `https://your-domain/{slug}` 時，系統會回傳只包含 OG / Twitter meta 的 HTML (200 OK)：
+  1. 優先使用該短連結自己的 `title`、`description`、`image`。
+  2. 如果短連結未設定，fallback 到 `Dashboard -> Settings -> Site SEO` 設定。
+- **透通模式 (`passthrough`)**：社群 crawler 讀取短網址時，系統直接回應 302 重定向至原始目標 URL，由社群平台爬蟲直接存取目標網站並讀取其原始 OG 預覽卡片。
+
+**設定層級與優先順序**：
+
+1. **單一短網址設定**（`Dashboard -> Links Editor`）：可選 `Inherit` (繼承全域)、`Custom` (自訂模式) 或 `Passthrough` (透通模式)。
+2. **全域預設設定**（`Dashboard -> Settings -> Site SEO`）：可設定預設為 `Custom` 或 `Passthrough`。
 
 ### 靜態 fallback 設定
 

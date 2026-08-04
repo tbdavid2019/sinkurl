@@ -6,11 +6,14 @@ export const EnterpriseSettingsSchema = z.object({
   content: z.string().trim().max(50000).default(''),
 })
 
+export const SeoOgModeSchema = z.enum(['custom', 'passthrough'])
+
 export const SeoSettingsSchema = z.object({
   title: z.string().trim().max(120).default(''),
   description: z.string().trim().max(300).default(''),
   image: z.string().trim().url().max(2048).or(z.literal('')).default(''),
   siteName: z.string().trim().max(120).default(''),
+  ogMode: SeoOgModeSchema.default('custom'),
 })
 
 export const TransitionModeSchema = z.enum(['disabled', 'inherit', 'force'])

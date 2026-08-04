@@ -305,4 +305,135 @@ describe.sequential('transition redirect behavior', () => {
     expect(html).toContain('<meta property="og:image" content="https://example.com/site-og.jpg">')
     expect(html).toContain('<meta property="og:site_name" content="Site Name">')
   })
+
+  it('redirects social preview crawlers when global ogMode is passthrough', async () => {
+    const slug = uniqueSlug('og-global-passthrough')
+    const targetUrl = `https://example.com/${slug}`
+
+    const seoRes = await fetchWithAuth('/api/settings/seo', {
+      method: 'POST',
+      body: JSON.stringify({
+        title: 'Site OG Title',
+        description: 'Site OG Description',
+        image: 'https://example.com/site-og.jpg',
+        siteName: 'Site Name',
+        ogMode: 'passthrough',
+      }),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+    const seoData = await seoRes.json()
+    expect(seoData.setting?.ogMode).toBe('passthrough')
+
+    const createResponse = await fetchWithAuth('/api/link/create', {
+      method: 'POST',
+      body: JSON.stringify({
+        url: targetUrl,
+        slug,
+        isCustomSlug: true,
+      }),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+
+    expect(createResponse.status).toBe(201)
+
+    const response = await fetch(`/${slug}`, {
+      headers: {
+        'User-Agent': 'facebookexternalhit/1.1',
+      },
+      redirect: 'manual',
+    })
+
+    expect(response.status).toBeGreaterThanOrEqual(300)
+    expect(response.status).toBeLessThan(400)
+    expect(response.headers.get('location')).toBe(targetUrl)
+  })
+
+  it('redirects social preview crawlers when link ogMode is passthrough overriding global custom', async () => {
+    const slug = uniqueSlug('og-link-passthrough')
+    const targetUrl = `https://example.com/${slug}`
+
+    await fetchWithAuth('/api/settings/seo', {
+      method: 'POST',
+      body: JSON.stringify({
+        title: 'Site OG Title',
+        ogMode: 'custom',
+      }),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+
+    const createResponse = await fetchWithAuth('/api/link/create', {
+      method: 'POST',
+      body: JSON.stringify({
+        url: targetUrl,
+        slug,
+        isCustomSlug: true,
+        ogMode: 'passthrough',
+      }),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+
+    expect(createResponse.status).toBe(201)
+
+    const response = await fetch(`/${slug}`, {
+      headers: {
+        'User-Agent': 'Twitterbot/1.0',
+      },
+      redirect: 'manual',
+    })
+
+    expect(response.status).toBeGreaterThanOrEqual(300)
+    expect(response.status).toBeLessThan(400)
+    expect(response.headers.get('location')).toBe(targetUrl)
+  })
+
+  it('serves custom OG metadata when link ogMode is custom overriding global passthrough', async () => {
+    const slug = uniqueSlug('og-link-custom-override')
+    const targetUrl = `https://example.com/${slug}`
+
+    await fetchWithAuth('/api/settings/seo', {
+      method: 'POST',
+      body: JSON.stringify({
+        title: 'Global Site Title',
+        ogMode: 'passthrough',
+      }),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+
+    const createResponse = await fetchWithAuth('/api/link/create', {
+      method: 'POST',
+      body: JSON.stringify({
+        url: targetUrl,
+        slug,
+        isCustomSlug: true,
+        title: 'Custom Link Title',
+        ogMode: 'custom',
+      }),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+
+    expect(createResponse.status).toBe(201)
+
+    const response = await fetch(`/${slug}`, {
+      headers: {
+        'User-Agent': 'facebookexternalhit/1.1',
+      },
+      redirect: 'manual',
+    })
+    const html = await response.text()
+
+    expect(response.status).toBe(200)
+    expect(html).toContain('<meta property="og:title" content="Custom Link Title">')
+  })
 })

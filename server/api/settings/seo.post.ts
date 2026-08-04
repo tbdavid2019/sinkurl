@@ -9,7 +9,8 @@ export default eventHandler(async (event) => {
     })
   }
 
-  const setting = await readValidatedBody(event, SeoSettingsSchema.parse)
+  const body = await readBody(event)
+  const setting = SeoSettingsSchema.parse(body)
   const { cloudflare } = event.context
   if (!cloudflare) {
     throw createError({

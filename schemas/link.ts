@@ -24,4 +24,5 @@ export const LinkSchema = z.object({
   image: z.string().trim().url().max(2048).optional(),
   transitionMode: z.enum(['inherit', 'on', 'off']).default('inherit'),
   transitionHtml: z.string().trim().max(10000).optional(),
+  ogMode: z.enum(['inherit', 'custom', 'passthrough']).default('inherit'),
 })

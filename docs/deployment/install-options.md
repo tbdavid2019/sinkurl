@@ -138,7 +138,9 @@ pnpm deploy:worker
 目前 [`package.json`](/Users/david/Documents/git/tbdavid2019/Sink/package.json) 內：
 
 ```json
-"deploy": "npm run deploy:pages"
+{
+  "deploy": "npm run deploy:pages"
+}
 ```
 
 也就是說：
@@ -153,7 +155,9 @@ pnpm deploy:worker
 目前 [`package.json`](/Users/david/Documents/git/tbdavid2019/Sink/package.json) 內：
 
 ```json
-"deploy:pages": "wrangler pages deploy dist"
+{
+  "deploy:pages": "wrangler pages deploy dist"
+}
 ```
 
 這代表它只負責把 `dist` 上傳出去，不負責保證 `dist` 是用 `cloudflare-pages` preset build 出來的。
