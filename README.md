@@ -17,10 +17,12 @@
 - **連結過期設定**：支援為特定的短網址設定到期時間，逾期自動失效。
 - **Transition Page**：支援全域或單一短連結顯示中介跳轉頁，可放安全提示、自訂 HTML 或廣告內容。
 - **Dashboard 總數可視化**：`Dashboard -> Links` 會直接顯示目前站內短網址總數，方便快速掌握規模。
+- **WebMCP & MCP 協議原生支援**：內建 Model Context Protocol (MCP) 與 Cloudflare WebMCP 標準支援，瀏覽器端 AI Agent (Chrome 146+) 及 Claude Desktop / Cursor 可直接調用結構化工具縮短與管理短網址。
 
 ## 🧱 技術棧
 
 - **前端框架**：[Nuxt 4](https://nuxt.com/)
+- **AI 協議**：[Model Context Protocol (MCP)](https://modelcontextprotocol.io/) & [Cloudflare WebMCP](https://blog.cloudflare.com/webmcp/)
 - **資料庫/儲存**：[Cloudflare Workers KV](https://developers.cloudflare.com/kv/)
 - **分析引擎**：[Cloudflare Workers Analytics Engine](https://developers.cloudflare.com/analytics/)
 - **UI 組件**：[shadcn-vue](https://www.shadcn-vue.com/) & [Tailwind CSS](https://tailwindcss.com/)
@@ -179,6 +181,52 @@ GA4 會透過 `gtag('event', ...)` 送出事件；Meta Pixel 會送出 `Shortlin
 5. 將 Channel ID 填入後台的 **LINE Channel ID**。
 
 若未開啟 **Require LINE Login before redirect**，系統只會在使用者已登入 LIFF 時嘗試驗證 LINE ID token；若開啟，未登入訪客會先被導入 LINE 授權流程。
+
+---
+
+## 🤖 WebMCP 與 Model Context Protocol (MCP) 整合
+
+Sink 內建對 **Model Context Protocol (MCP)** 以及 **Cloudflare WebMCP**（Chrome 146+ 瀏覽器端 AI Agent）的完整支援。AI Agent（例如 Claude Desktop、Cursor、Cline 或瀏覽器 AI 助手）可以直接調用 Sink 的結構化 Tools 建立短網址、查詢狀態與管理連結，無需透過爬蟲解析 DOM。
+
+### 1. 提供的 MCP 端點
+
+- **WebMCP / 根路徑端點**：`https://您的網域/mcp`
+- **標準 API 路徑端點**：`https://您的網域/api/mcp`
+- **WebMCP 瀏覽器 Bridge 腳本**：`https://您的網域/.webmcp/bridge.js`
+
+> 💡 **自動探索**：Sink 首頁 HTML 的 `<head>` 中已注入 `<link rel="model-context" href="/mcp">` 與 `<meta name="model-context-protocol" content="/mcp">`，支援 WebMCP 的客戶端會自動偵測並掛載。
+
+### 2. 支援之 AI Tools 清單
+
+| Tool 名稱            | 描述                                     | 是否需驗證              | 參數                                                                                                     |
+| :------------------- | :--------------------------------------- | :---------------------- | :------------------------------------------------------------------------------------------------------- |
+| `shorten_url`        | 將長網址縮短為短網址                     | 否（公開）              | `url` (必填), `slug` (選填), `expiration` (如 `1d`, `7d`, `1h`), `comment` (選填), `isCustomSlug` (選填) |
+| `lookup_link`        | 查詢短網址之目的網址、過期時間與建立時間 | 否（公開）              | `slug` (必填)                                                                                            |
+| `list_links`         | 分頁取得短網址清單                       | **是**（需 Site Token） | `limit` (選填, 1~100), `cursor` (選填), `token` (選填)                                                   |
+| `delete_link`        | 刪除指定的短網址                         | **是**（需 Site Token） | `slug` (必填), `token` (選填)                                                                            |
+| `get_link_analytics` | 取得短網址的點擊數據與指標               | **是**（需 Site Token） | `slug` (必填), `interval` (如 `24h`, `7d`, `30d`), `token` (選填)                                        |
+| `get_service_info`   | 取得 Sink 服務版本、功能狀態與端點資訊   | 否（公開）              | 無                                                                                                       |
+
+### 3. 如何在 Claude Desktop / Cursor 中配置
+
+在您的 MCP 設定檔（例如 `claude_desktop_config.json` 或 Cursor MCP 設定）中加入：
+
+```json
+{
+  "mcpServers": {
+    "sink": {
+      "url": "https://您的短網址網域/mcp",
+      "headers": {
+        "Authorization": "Bearer 您的_NUXT_SITE_TOKEN"
+      }
+    }
+  }
+}
+```
+
+### 4. Cloudflare WebMCP 啟用方式
+
+若您的網站透過 Cloudflare 託管，可在 Cloudflare Dashboard 中開啟 **WebMCP Developer Preview** 開關，並將 MCP 端點指向 `/mcp`。瀏覽器端訪客（如 Chrome 146+ 試行版或 Cloudflare BrowserRun）即可直接利用 `document.modelContext` 調用 Sink 工具。
 
 ---
 

@@ -4,6 +4,33 @@
 
 ---
 
+## 📅 [2026-08-19]
+
+### 📌 新增 Model Context Protocol (MCP) 與 Cloudflare WebMCP 支援
+
+### ✅ 變更內容
+
+* **標準 JSON-RPC 2.0 MCP 端點**：新增 `/mcp` 與 `/api/mcp` 端點，支援 Model Context Protocol 標準協議規範（版本 `2024-11-05`），包含 `initialize`、`ping`、`tools/list`、`tools/call`、`resources/list` 與 `resources/read`。
+* **提供 6 大核心 AI Tools**：
+  1. `shorten_url`：建立短網址（支援自訂 slug、過期時間如 `1h`, `7d`、註解備註與 OG 卡片設定，自動支援隨機短網址重複使用）。
+  2. `lookup_link`：查詢特定短網址之目的網址、過期時間與建立資訊。
+  3. `list_links`：分頁查詢短網址清單（需帶 Site Token 驗證）。
+  4. `delete_link`：刪除特定短網址與關聯索引（需帶 Site Token 驗證）。
+  5. `get_link_analytics`：查詢短網址點擊分析與訪問指標（需帶 Site Token 驗證）。
+  6. `get_service_info`：查詢 Sink 服務狀態、版本與 WebMCP 特性能力。
+* **WebMCP 瀏覽器端原生支援**：
+  * **HTML Head 探索標籤**：新增 `<link rel="model-context" href="/mcp">` 與 `<meta name="model-context-protocol" content="/mcp">`。
+  * **Nuxt 4 Client Plugin**：新增 [app/plugins/webmcp.client.ts](file:///Users/david/Documents/git/tbdavid2019/sinkurl/app/plugins/webmcp.client.ts)，當 Chrome 146+ 或 Cloudflare BrowserRun 啟用 `document.modelContext` / `navigator.modelContext` 時，自動向瀏覽器註冊工具。
+  * **獨立 Bridge 腳本**：新增 [public/.webmcp/bridge.js](file:///Users/david/Documents/git/tbdavid2019/sinkurl/public/.webmcp/bridge.js) 橋接腳本（相容 ES Module 腳本中 `document.currentScript` 為 null 之情境，並具備精確選取器與 `/mcp` fallback），相容 Cloudflare WebMCP 邊緣注入與外部網頁嵌入。
+* **雙路由端點架構**：統一由 `server/utils/mcp.ts` 導出 `handleMcpEvent`，供 `/mcp`（WebMCP 預設探索路徑）與 `/api/mcp`（標準 API 客戶端）共用並標註明確註解說明。
+* **安全與權限隔離**：
+  * 公開查詢與快速縮短支援無障礙調用。
+  * 管理類 Tools（列表、刪除、統計數據）支援透過 HTTP `Authorization: Bearer <token>` 或 Tool 參數 `token` 進行多層次授權驗證。
+* **保留路由更新**：於 [app/app.config.ts](file:///Users/david/Documents/git/tbdavid2019/sinkurl/app/app.config.ts) 的 `reserveSlug` 補上 `mcp`、`.webmcp` 與 `api`，避免短網址路由衝突。
+* **測試覆蓋**：新增 [tests/mcp.spec.ts](file:///Users/david/Documents/git/tbdavid2019/sinkurl/tests/mcp.spec.ts)，完整覆蓋 MCP 初始化、工具清單、工具調用、未授權阻擋、Bearer 授權執行與刪除流程（11 個測試全數通過）。
+
+---
+
 ## 📅 [2026-08-04]
 
 ### 📌 新增 OG 預覽透通模式 (Passthrough Mode) 支援

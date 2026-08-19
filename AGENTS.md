@@ -27,6 +27,12 @@ Vitest is configured in `vitest.config.ts` with `@cloudflare/vitest-pool-workers
 
 Git history follows Conventional Commits (`fix: adjust analytics filter`, `chore(release): bump version to v0.2.1`). Before pushing, confirm `pnpm lint && pnpm test` pass and attach screenshots or recordings for UI changes. PR descriptions should outline motivation, scope, related issues, and rollout considerations. When adding or renaming environment variables, update `docs/configuration.md` and mention new `.env` keys in the PR body.
 
+## Documentation & Changelog Maintenance
+
+- **Mandatory Updates**: Whenever making changes, implementing features, fixing bugs, or modifying schemas/configuration, **ALWAYS** update `CHANGELOG.md` and/or `README.md` to document what was added or changed, how it works, and any deployment/configuration notes.
+- In `CHANGELOG.md`, record the date, title, detailed changes, schema changes, test coverage, and deployment gotchas if applicable.
+- In `README.md`, document new features, API endpoints, environment variables, or usage guides whenever user-facing capabilities or workflows are introduced.
+
 ## Configuration & Security Tips
 
 Environment variables (e.g., `NUXT_SITE_TOKEN`, KV bindings, Analytics tokens) live in `.env`, while `wrangler.jsonc` defines Worker bindings. Use `pnpm preview` or `wrangler dev --var KEY:VALUE` to inject local secrets. Never commit real credentials—document placeholders in `docs/configuration.md` instead. If Cloudflare resources or binding names change, update both `wrangler` config and the corresponding references under `server/` to avoid deployment regressions.

@@ -38,8 +38,17 @@ useHead({
       name: 'theme-color',
       content: '#10b981',
     },
+    {
+      name: 'model-context-protocol',
+      content: '/mcp',
+    },
   ],
   link: [
+    {
+      rel: 'model-context',
+      type: 'application/json',
+      href: '/mcp',
+    },
     {
       rel: 'icon',
       type: 'image/png',
@@ -65,6 +74,11 @@ useHead({
     },
   ],
   script: [
+    {
+      'type': 'module',
+      'src': '/.webmcp/bridge.js',
+      'data-mcp-url': '/mcp',
+    },
     {
       type: 'application/ld+json',
       children: JSON.stringify({

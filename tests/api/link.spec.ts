@@ -45,14 +45,15 @@ describe.sequential('/api/link/create', () => {
   })
 
   it('returns 409 when slug already exists', async () => {
-    const payload = generateMock(z.object({
-      url: z.string().url(),
-      slug: z.string().min(1).max(50),
-    }))
+    const slug = `conflict-slug-${Math.random().toString(36).slice(2)}`
 
     await fetchWithAuth('/api/link/create', {
       method: 'POST',
-      body: JSON.stringify(payload),
+      body: JSON.stringify({
+        url: 'https://example.com/first-conflict-url',
+        slug,
+        isCustomSlug: true,
+      }),
       headers: {
         'Content-Type': 'application/json',
       },
@@ -60,7 +61,11 @@ describe.sequential('/api/link/create', () => {
 
     const duplicateResponse = await fetchWithAuth('/api/link/create', {
       method: 'POST',
-      body: JSON.stringify(payload),
+      body: JSON.stringify({
+        url: 'https://example.com/second-conflict-url',
+        slug,
+        isCustomSlug: true,
+      }),
       headers: {
         'Content-Type': 'application/json',
       },

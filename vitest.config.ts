@@ -3,6 +3,7 @@ import { loadEnv } from 'vite'
 
 export default defineWorkersConfig(({ mode }) => ({
   test: {
+    include: ['tests/**/*.spec.ts'],
     env: loadEnv(mode, process.cwd(), ''),
     globalSetup: './tests/setup.ts',
     poolOptions: {
