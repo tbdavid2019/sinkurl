@@ -8,15 +8,21 @@ const logs = ref([])
 const logskey = ref(0)
 
 async function getEvents() {
-  const data = await useAPI('/api/logs/events', {
-    query: {
-      startAt: time.value.startAt,
-      endAt: time.value.endAt,
-      ...filters.value,
-    },
-  })
-  logs.value = data?.reverse()
-  logskey.value = Date.now()
+  try {
+    const data = await useAPI('/api/logs/events', {
+      query: {
+        startAt: time.value.startAt,
+        endAt: time.value.endAt,
+        ...filters.value,
+      },
+    })
+    logs.value = Array.isArray(data) ? data.reverse() : []
+    logskey.value = Date.now()
+  }
+  catch (error) {
+    console.error('Failed to load events:', error)
+    logs.value = []
+  }
 }
 
 watch([time, filters], getEvents, {

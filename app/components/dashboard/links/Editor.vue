@@ -137,7 +137,7 @@ const form = useForm({
   keepValuesOnUnmount: isEdit,
 })
 
-const generatedSlug = ref<string | undefined>(isEdit ? undefined : link.value.slug)
+const generatedSlug = ref(isEdit ? undefined : link.value.slug)
 
 watch(() => form.values.url, (newUrl) => {
   if (!newUrl)

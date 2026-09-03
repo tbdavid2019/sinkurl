@@ -37,33 +37,55 @@ const highest = computed(() => {
 let globe = null
 
 async function getGlobeJSON() {
-  const data = await $fetch('/countries.geojson')
-  countries.value = data
+  try {
+    const data = await $fetch('/countries.geojson')
+    countries.value = data
+  }
+  catch (e) {
+    console.error('Failed to load countries.geojson', e)
+  }
 }
 
 async function getColosJSON() {
-  const data = await $fetch('/colos.json')
-  colos.value = data
+  try {
+    const data = await $fetch('/colos.json')
+    colos.value = data
+  }
+  catch (e) {
+    console.error('Failed to load colos.json', e)
+  }
 }
 
 async function getCurrentLocation() {
-  const data = await useAPI('/api/location')
-  currentLocation.value = data
+  try {
+    const data = await useAPI('/api/location')
+    currentLocation.value = data
+  }
+  catch (e) {
+    console.error('Failed to load current location', e)
+  }
 }
 
 async function getLiveLocations() {
-  const { data } = await useAPI('/api/logs/locations', {
-    query: {
-      startAt: time.value.startAt,
-      endAt: time.value.endAt,
-      ...filters.value,
-    },
-  })
-  locations.value = data?.map(e => ({
-    lat: e.latitude,
-    lng: e.longitude,
-    count: Math.max(1, +e.count / highest.value),
-  }))
+  try {
+    const res = await useAPI('/api/logs/locations', {
+      query: {
+        startAt: time.value.startAt,
+        endAt: time.value.endAt,
+        ...filters.value,
+      },
+    })
+    const data = (res && res.data) || []
+    locations.value = data.map(e => ({
+      lat: e.latitude,
+      lng: e.longitude,
+      count: Math.max(1, +e.count / highest.value),
+    }))
+  }
+  catch (e) {
+    console.error('Failed to load live locations', e)
+    locations.value = []
+  }
 }
 
 let cleanArcsDataTimer = null

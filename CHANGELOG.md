@@ -6,6 +6,18 @@
 
 ## 📅 [2026-09-03]
 
+### 📌 儀表板執行期錯誤與即時分析修復 (Fix Dashboard 404 & Realtime Globe)
+
+* **修復 `/dashboard/links` 拋出 404 錯誤**：
+  * 在 [`app/components/dashboard/links/Editor.vue`](file:///Users/david/git/tbdavid2019/sinkurl/app/components/dashboard/links/Editor.vue) 中移除 JavaScript SFC `<script setup>` 內非法的 `<string | undefined>` TypeScript 泛型語法，避免瀏覽器將其視為變數比較運算並拋出 `ReferenceError: string is not defined` 導致 Nuxt 渲染 404 錯誤頁。
+* **修復 `/dashboard/realtime` 3D 地球儀與即時日誌空白崩潰**：
+  * 重建並補回遺失之 [`server/api/logs/events.get.ts`](file:///Users/david/git/tbdavid2019/sinkurl/server/api/logs/events.get.ts) 與 [`server/api/logs/locations.get.ts`](file:///Users/david/git/tbdavid2019/sinkurl/server/api/logs/locations.get.ts) 統計端點，並加入安全查詢與錯誤攔截。
+  * 在 [`app/components/dashboard/realtime/Globe.vue`](file:///Users/david/git/tbdavid2019/sinkurl/app/components/dashboard/realtime/Globe.vue) 與 [`Logs.vue`](file:///Users/david/git/tbdavid2019/sinkurl/app/components/dashboard/realtime/Logs.vue) 加入 `try/catch` 容錯防護，即使 Analytics 資料集暫無數據也不會中斷 3D 地球儀初始化渲染。
+* **客戶端 `/dashboard` 路由補齊**：
+  * 新增 [`app/pages/dashboard/index.vue`](file:///Users/david/git/tbdavid2019/sinkurl/app/pages/dashboard/index.vue)，確保客戶端導航存取 `/dashboard` 時能正確跳轉至 `/dashboard/links`。
+
+---
+
 ### 📌 全面安全性稽核與漏洞修復 (Security Audit Remediation)
 
 經過 Cloudflare `security-audit-skill` 6 階段深度稽核，全面修復發現的高風險與中風險安全弱點：
