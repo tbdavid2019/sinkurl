@@ -23,8 +23,24 @@ for (const file of files) {
   const content = fs.readFileSync(file, 'utf-8')
   const lines = content.split('\n')
 
+  let inCodeBlock = false
+
   lines.forEach((line, index) => {
-    const match = line.match(LINK_REGEX) || line.match(HTML_REGEX) || line.match(BARE_LOCAL_URI_REGEX)
+    // Toggle multi-line code block state (``` or ~~~)
+    if (line.trim().startsWith('```') || line.trim().startsWith('~~~')) {
+      inCodeBlock = !inCodeBlock
+      return
+    }
+
+    // Skip lines inside fenced code blocks
+    if (inCodeBlock) {
+      return
+    }
+
+    // Strip inline backtick code snippets to avoid false positives in documentation
+    const cleanedLine = line.replace(/`[^`]*`/g, '')
+
+    const match = line.match(LINK_REGEX) || line.match(HTML_REGEX) || cleanedLine.match(BARE_LOCAL_URI_REGEX)
     if (match) {
       console.error(`❌ [Local File URI Detected] ${file}:${index + 1}`)
       console.error(`   ${line.trim()}`)
