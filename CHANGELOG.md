@@ -15,12 +15,13 @@
   * 在 [`app/components/dashboard/realtime/Globe.vue`](app/components/dashboard/realtime/Globe.vue) 與 [`Logs.vue`](app/components/dashboard/realtime/Logs.vue) 加入 `try/catch` 容錯防護，即使 Analytics 資料集暫無數據也不會中斷 3D 地球儀初始化渲染。
 * **客戶端 `/dashboard` 路由補齊**：
   * 新增 [`app/pages/dashboard/index.vue`](app/pages/dashboard/index.vue)，確保客戶端導航存取 `/dashboard` 時能正確跳轉至 `/dashboard/links`。
-* **`Logs.vue` 陣列原地修改副作用修復**：
-  * 在 [`app/components/dashboard/realtime/Logs.vue`](app/components/dashboard/realtime/Logs.vue) 中改以 `[...data].reverse()` 淺拷貝反轉陣列，避免 `Array.prototype.reverse()` 原地修改造成潛在副作用。
-* **文件本機路徑 (Local file URIs) 清理**：
+* **`Logs.vue` 陣列原生反轉優化**：
+  * 在 [`app/components/dashboard/realtime/Logs.vue`](app/components/dashboard/realtime/Logs.vue) 中改用現代 JavaScript ES2023 原生 `data.toReversed()`，語意清晰且效能更佳，徹底避免 `Array.prototype.reverse()` 原地修改副作用。
+* **文件本機路徑清理與自動化防護 (Pre-commit Hook)**：
   * 清理 [`CHANGELOG.md`](CHANGELOG.md) 與 [`README.md`](README.md) 中所有的 `file:///Users/david/...` 本機絕對路徑，全數改為相對路徑。
-* **API 降級可觀測性強化與 Cloudflare Workers Observability**：
-  * 在 [`server/api/logs/events.get.ts`](server/api/logs/events.get.ts) 與 [`server/api/logs/locations.get.ts`](server/api/logs/locations.get.ts) 加入 `X-Sink-Status: degraded` 響應標頭，讓前端維持優雅降級不白屏的同時，邊緣端與開發者能清楚追蹤異常降級請求。
+  * 新增 [`scripts/check-file-uris.mjs`](scripts/check-file-uris.mjs) 檢查腳本並整合至 `lint-staged` pre-commit hook，防止未來編輯 Markdown 文件時誤貼或誤提交本機 `file:///` 路徑。
+* **API 降級可觀測性強化與防快取穿透 (Anti-Cache Degradation)**：
+  * 在 [`server/api/logs/events.get.ts`](server/api/logs/events.get.ts) 與 [`server/api/logs/locations.get.ts`](server/api/logs/locations.get.ts) 加入 `X-Sink-Status: degraded` 響應標頭與 `Cache-Control: no-store`，確保在後端服務異常降級回傳空陣列時，Cloudflare CDN 與瀏覽器快取不會暫存空白數據，保障服務恢復後的即時刷新。
   * 在 [`wrangler.jsonc`](wrangler.jsonc) 配置 `"observability": { "enabled": true }`，啟用 Cloudflare Workers 100% 原生日誌串流與可觀測性追蹤。
 
 ---

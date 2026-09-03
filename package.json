@@ -93,6 +93,9 @@
   "lint-staged": {
     "*.{js,jsx,ts,tsx,vue}": [
       "eslint --fix"
+    ],
+    "*.md": [
+      "node scripts/check-file-uris.mjs"
     ]
   }
 }
