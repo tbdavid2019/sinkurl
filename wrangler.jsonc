@@ -12,6 +12,9 @@
   ],
   "keep_vars": true,
   "upload_source_maps": true,
+  "observability": {
+    "enabled": true
+  },
   "ai": {
     "binding": "AI"
   },

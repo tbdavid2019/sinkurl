@@ -9,12 +9,19 @@
 ### 📌 儀表板執行期錯誤與即時分析修復 (Fix Dashboard 404 & Realtime Globe)
 
 * **修復 `/dashboard/links` 拋出 404 錯誤**：
-  * 在 [`app/components/dashboard/links/Editor.vue`](file:///Users/david/git/tbdavid2019/sinkurl/app/components/dashboard/links/Editor.vue) 中移除 JavaScript SFC `<script setup>` 內非法的 `<string | undefined>` TypeScript 泛型語法，避免瀏覽器將其視為變數比較運算並拋出 `ReferenceError: string is not defined` 導致 Nuxt 渲染 404 錯誤頁。
+  * 在 [`app/components/dashboard/links/Editor.vue`](app/components/dashboard/links/Editor.vue) 中移除 JavaScript SFC `<script setup>` 內非法的 `<string | undefined>` TypeScript 泛型語法，避免瀏覽器將其視為變數比較運算並拋出 `ReferenceError: string is not defined` 導致 Nuxt 渲染 404 錯誤頁。
 * **修復 `/dashboard/realtime` 3D 地球儀與即時日誌空白崩潰**：
-  * 重建並補回遺失之 [`server/api/logs/events.get.ts`](file:///Users/david/git/tbdavid2019/sinkurl/server/api/logs/events.get.ts) 與 [`server/api/logs/locations.get.ts`](file:///Users/david/git/tbdavid2019/sinkurl/server/api/logs/locations.get.ts) 統計端點，並加入安全查詢與錯誤攔截。
-  * 在 [`app/components/dashboard/realtime/Globe.vue`](file:///Users/david/git/tbdavid2019/sinkurl/app/components/dashboard/realtime/Globe.vue) 與 [`Logs.vue`](file:///Users/david/git/tbdavid2019/sinkurl/app/components/dashboard/realtime/Logs.vue) 加入 `try/catch` 容錯防護，即使 Analytics 資料集暫無數據也不會中斷 3D 地球儀初始化渲染。
+  * 重建並補回遺失之 [`server/api/logs/events.get.ts`](server/api/logs/events.get.ts) 與 [`server/api/logs/locations.get.ts`](server/api/logs/locations.get.ts) 統計端點，並加入安全查詢與錯誤攔截。
+  * 在 [`app/components/dashboard/realtime/Globe.vue`](app/components/dashboard/realtime/Globe.vue) 與 [`Logs.vue`](app/components/dashboard/realtime/Logs.vue) 加入 `try/catch` 容錯防護，即使 Analytics 資料集暫無數據也不會中斷 3D 地球儀初始化渲染。
 * **客戶端 `/dashboard` 路由補齊**：
-  * 新增 [`app/pages/dashboard/index.vue`](file:///Users/david/git/tbdavid2019/sinkurl/app/pages/dashboard/index.vue)，確保客戶端導航存取 `/dashboard` 時能正確跳轉至 `/dashboard/links`。
+  * 新增 [`app/pages/dashboard/index.vue`](app/pages/dashboard/index.vue)，確保客戶端導航存取 `/dashboard` 時能正確跳轉至 `/dashboard/links`。
+* **`Logs.vue` 陣列原地修改副作用修復**：
+  * 在 [`app/components/dashboard/realtime/Logs.vue`](app/components/dashboard/realtime/Logs.vue) 中改以 `[...data].reverse()` 淺拷貝反轉陣列，避免 `Array.prototype.reverse()` 原地修改造成潛在副作用。
+* **文件本機路徑 (Local file URIs) 清理**：
+  * 清理 [`CHANGELOG.md`](CHANGELOG.md) 與 [`README.md`](README.md) 中所有的 `file:///Users/david/...` 本機絕對路徑，全數改為相對路徑。
+* **API 降級可觀測性強化與 Cloudflare Workers Observability**：
+  * 在 [`server/api/logs/events.get.ts`](server/api/logs/events.get.ts) 與 [`server/api/logs/locations.get.ts`](server/api/logs/locations.get.ts) 加入 `X-Sink-Status: degraded` 響應標頭，讓前端維持優雅降級不白屏的同時，邊緣端與開發者能清楚追蹤異常降級請求。
+  * 在 [`wrangler.jsonc`](wrangler.jsonc) 配置 `"observability": { "enabled": true }`，啟用 Cloudflare Workers 100% 原生日誌串流與可觀測性追蹤。
 
 ---
 
@@ -25,27 +32,27 @@
 ### ✅ 變更內容
 
 * **URL 協議限制與 Stored DOM XSS 防禦**：
-  * 在 [`schemas/link.ts`](file:///Users/david/git/tbdavid2019/sinkurl/schemas/link.ts) 中針對 `url` 與 `image` 加入協定限制驗證，強制僅允許 `http://` 與 `https://`，嚴格阻斷 `javascript:`、`data:` 與 `vbscript:` 偽協定。
-  * 在 [`server/api/link/ai.get.ts`](file:///Users/david/git/tbdavid2019/sinkurl/server/api/link/ai.get.ts) 補齊 URL 最大長度與 `http`/`https` 驗證。
-  * 在 [`server/middleware/1.redirect.ts`](file:///Users/david/git/tbdavid2019/sinkurl/server/middleware/1.redirect.ts) 執行重定向與渲染前強制檢查 `target` 協定。
+  * 在 [`schemas/link.ts`](schemas/link.ts) 中針對 `url` 與 `image` 加入協定限制驗證，強制僅允許 `http://` 與 `https://`，嚴格阻斷 `javascript:`、`data:` 與 `vbscript:` 偽協定。
+  * 在 [`server/api/link/ai.get.ts`](server/api/link/ai.get.ts) 補齊 URL 最大長度與 `http`/`https` 驗證。
+  * 在 [`server/middleware/1.redirect.ts`](server/middleware/1.redirect.ts) 執行重定向與渲染前強制檢查 `target` 協定。
 * **過渡跳轉頁面 XSS 與腳本逃逸防護**：
-  * 在 [`server/middleware/1.redirect.ts`](file:///Users/david/git/tbdavid2019/sinkurl/server/middleware/1.redirect.ts) 新增 `sanitizeTransitionHtml` 過濾器，清除 `transitionContent` 內的危險標籤（`<script>`、`<iframe>`、`<object>` 等）與 `on*` 事件屬性。
+  * 在 [`server/middleware/1.redirect.ts`](server/middleware/1.redirect.ts) 新增 `sanitizeTransitionHtml` 過濾器，清除 `transitionContent` 內的危險標籤（`<script>`、`<iframe>`、`<object>` 等）與 `on*` 事件屬性。
   * 新增 `safeJsonStringify` 序列化函式，將內聯 `<script>` 中的 `<` 逸出為 `\u003c`，杜絕藉由 `</script>` 標籤逃逸執行的 XSS。
 * **Markdown 渲染 XSS 防禦**：
-  * 在 [`app/pages/index.vue`](file:///Users/david/git/tbdavid2019/sinkurl/app/pages/index.vue) 與 [`app/components/dashboard/settings/Index.vue`](file:///Users/david/git/tbdavid2019/sinkurl/app/components/dashboard/settings/Index.vue) 的 `marked.parse` 輸出端新增 HTML 清洗函式，消除公開首頁與後台預覽區塊的代碼注入風險。
+  * 在 [`app/pages/index.vue`](app/pages/index.vue) 與 [`app/components/dashboard/settings/Index.vue`](app/components/dashboard/settings/Index.vue) 的 `marked.parse` 輸出端新增 HTML 清洗函式，消除公開首頁與後台預覽區塊的代碼注入風險。
 * **MCP 服務存取控制與防竄改強化**：
-  * **Fail-Closed 驗證防護**：修正 [`server/utils/mcp.ts`](file:///Users/david/git/tbdavid2019/sinkurl/server/utils/mcp.ts) `isAuthorized`，當未配置站點金鑰時強制拒絕存取（fail-closed），杜絕空金鑰全開放漏洞。
+  * **Fail-Closed 驗證防護**：修正 [`server/utils/mcp.ts`](server/utils/mcp.ts) `isAuthorized`，當未配置站點金鑰時強制拒絕存取（fail-closed），杜絕空金鑰全開放漏洞。
   * **Demo 預覽模式保護**：在 MCP `delete_link` 工具中補齊 `previewMode` 判斷，阻斷 demo 站點利用公開 `SinkCool` 金鑰刪除短網址的越權操作。
   * **保留路由衝突防護**：在 MCP `shorten_url`、`server/api/link/create.post.ts` 與 `server/api/link/upsert.post.ts` 全面強制校驗 `appConfig.reserveSlug`，防止惡意佔用 `dashboard`、`api`、`mcp` 等系統核心路徑。
   * **未授權查詢脫敏**：未攜帶合法金鑰調用 MCP `lookup_link` 時自動過濾管理備註 `comment` 等機敏欄位。
 * **Cloudflare Analytics Engine SQL 注入與錯誤洩漏修復**：
-  * 在 [`server/api/stats/views.get.ts`](file:///Users/david/git/tbdavid2019/sinkurl/server/api/stats/views.get.ts) 中為 `clientTimezone` 加上嚴格的 IANA 時區正則校驗 `/^[A-Za-z0-9_/+ -]+$/`，並將 `unit` 限制為 enum，杜絕 ClickHouse 語法破出注入。
-  * 在 [`server/api/stats/views.get.ts`](file:///Users/david/git/tbdavid2019/sinkurl/server/api/stats/views.get.ts)、[`metrics.get.ts`](file:///Users/david/git/tbdavid2019/sinkurl/server/api/stats/metrics.get.ts) 與 [`counters.get.ts`](file:///Users/david/git/tbdavid2019/sinkurl/server/api/stats/counters.get.ts) 將 `useWAE` 包裹於 `try/catch` 之中，遮蔽上游錯誤訊息，防止 `cfAccountId` 等帳號資訊外洩。
+  * 在 [`server/api/stats/views.get.ts`](server/api/stats/views.get.ts) 中為 `clientTimezone` 加上嚴格的 IANA 時區正則校驗 `/^[A-Za-z0-9_/+ -]+$/`，並將 `unit` 限制為 enum，杜絕 ClickHouse 語法破出注入。
+  * 在 [`server/api/stats/views.get.ts`](server/api/stats/views.get.ts)、[`metrics.get.ts`](server/api/stats/metrics.get.ts) 與 [`counters.get.ts`](server/api/stats/counters.get.ts) 將 `useWAE` 包裹於 `try/catch` 之中，遮蔽上游錯誤訊息，防止 `cfAccountId` 等帳號資訊外洩。
   * 在 `metrics.get.ts` 驗證 `query.type` 是否存在於 `logsMap` 鍵值中。
 * **過渡頁面追蹤信標 401 錯誤修復**：
-  * 調整 [`server/middleware/2.auth.ts`](file:///Users/david/git/tbdavid2019/sinkurl/server/middleware/2.auth.ts)，將 `/api/tracking/event` 納入身分驗證豁免清單，讓一般訪客於過渡跳轉頁面觸發的 GA4 / Meta Pixel / LINE 追蹤事件與 Token 驗證能正常傳輸。
+  * 調整 [`server/middleware/2.auth.ts`](server/middleware/2.auth.ts)，將 `/api/tracking/event` 納入身分驗證豁免清單，讓一般訪客於過渡跳轉頁面觸發的 GA4 / Meta Pixel / LINE 追蹤事件與 Token 驗證能正常傳輸。
 * **測試覆蓋**：
-  * 於 [`tests/api/link.spec.ts`](file:///Users/david/git/tbdavid2019/sinkurl/tests/api/link.spec.ts) 補充安全性迴歸測試（阻擋 `javascript:`、阻擋保留 slug、驗證追蹤信標），全數 51 個測試皆順利通過。
+  * 於 [`tests/api/link.spec.ts`](tests/api/link.spec.ts) 補充安全性迴歸測試（阻擋 `javascript:`、阻擋保留 slug、驗證追蹤信標），全數 51 個測試皆順利通過。
 
 ---
 
@@ -65,14 +72,14 @@
   6. `get_service_info`：查詢 Sink 服務狀態、版本與 WebMCP 特性能力。
 * **WebMCP 瀏覽器端原生支援**：
   * **HTML Head 探索標籤**：新增 `<link rel="model-context" href="/mcp">` 與 `<meta name="model-context-protocol" content="/mcp">`。
-  * **Nuxt 4 Client Plugin**：新增 [app/plugins/webmcp.client.ts](file:///Users/david/Documents/git/tbdavid2019/sinkurl/app/plugins/webmcp.client.ts)，當 Chrome 146+ 或 Cloudflare BrowserRun 啟用 `document.modelContext` / `navigator.modelContext` 時，自動向瀏覽器註冊工具。
-  * **獨立 Bridge 腳本**：新增 [public/.webmcp/bridge.js](file:///Users/david/Documents/git/tbdavid2019/sinkurl/public/.webmcp/bridge.js) 橋接腳本（相容 ES Module 腳本中 `document.currentScript` 為 null 之情境，並具備精確選取器與 `/mcp` fallback），相容 Cloudflare WebMCP 邊緣注入與外部網頁嵌入。
+  * **Nuxt 4 Client Plugin**：新增 [app/plugins/webmcp.client.ts](app/plugins/webmcp.client.ts)，當 Chrome 146+ 或 Cloudflare BrowserRun 啟用 `document.modelContext` / `navigator.modelContext` 時，自動向瀏覽器註冊工具。
+  * **獨立 Bridge 腳本**：新增 [public/.webmcp/bridge.js](public/.webmcp/bridge.js) 橋接腳本（相容 ES Module 腳本中 `document.currentScript` 為 null 之情境，並具備精確選取器與 `/mcp` fallback），相容 Cloudflare WebMCP 邊緣注入與外部網頁嵌入。
 * **雙路由端點架構**：統一由 `server/utils/mcp.ts` 導出 `handleMcpEvent`，供 `/mcp`（WebMCP 預設探索路徑）與 `/api/mcp`（標準 API 客戶端）共用並標註明確註解說明。
 * **安全與權限隔離**：
   * 公開查詢與快速縮短支援無障礙調用。
   * 管理類 Tools（列表、刪除、統計數據）支援透過 HTTP `Authorization: Bearer <token>` 或 Tool 參數 `token` 進行多層次授權驗證。
-* **保留路由更新**：於 [app/app.config.ts](file:///Users/david/Documents/git/tbdavid2019/sinkurl/app/app.config.ts) 的 `reserveSlug` 補上 `mcp`、`.webmcp` 與 `api`，避免短網址路由衝突。
-* **測試覆蓋**：新增 [tests/mcp.spec.ts](file:///Users/david/Documents/git/tbdavid2019/sinkurl/tests/mcp.spec.ts)，完整覆蓋 MCP 初始化、工具清單、工具調用、未授權阻擋、Bearer 授權執行與刪除流程（11 個測試全數通過）。
+* **保留路由更新**：於 [app/app.config.ts](app/app.config.ts) 的 `reserveSlug` 補上 `mcp`、`.webmcp` 與 `api`，避免短網址路由衝突。
+* **測試覆蓋**：新增 [tests/mcp.spec.ts](tests/mcp.spec.ts)，完整覆蓋 MCP 初始化、工具清單、工具調用、未授權阻擋、Bearer 授權執行與刪除流程（11 個測試全數通過）。
 
 ---
 

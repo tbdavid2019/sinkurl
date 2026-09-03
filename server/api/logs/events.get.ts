@@ -39,6 +39,7 @@ export default eventHandler(async (event) => {
   }
   catch (error: any) {
     console.error('Failed to query log events:', error)
+    setHeader(event, 'X-Sink-Status', 'degraded')
     return []
   }
 })

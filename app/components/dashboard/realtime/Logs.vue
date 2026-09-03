@@ -16,7 +16,7 @@ async function getEvents() {
         ...filters.value,
       },
     })
-    logs.value = Array.isArray(data) ? data.reverse() : []
+    logs.value = Array.isArray(data) ? [...data].reverse() : []
     logskey.value = Date.now()
   }
   catch (error) {

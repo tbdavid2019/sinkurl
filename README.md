@@ -241,7 +241,7 @@ Sink 內建對 **Model Context Protocol (MCP)** 以及 **Cloudflare WebMCP**（C
 1. 登入您的 Cloudflare 控制台，前往 **Storage & Databases (存儲與資料庫)** -> **KV**。
 2. 點擊 **Create a namespace (建立命名空間)**，將其命名（例如：`KV`）。
 3. 建立後複製生成的 **Namespace ID**（一串 32 位的英數混合字串）。
-4. 開啟專案根目錄的 [wrangler.jsonc](file:///Users/david/Documents/git/tbdavid2019/Sink/wrangler.jsonc)，找到 `kv_namespaces`，將 ID 填入：
+4. 開啟專案根目錄的 [wrangler.jsonc](wrangler.jsonc)，找到 `kv_namespaces`，將 ID 填入：
    ```json
    {
      "kv_namespaces": [
@@ -326,7 +326,7 @@ NUXT_SITE_TOKEN="您的自訂密碼"
 - **OG / Twitter Image URL**：分享卡片圖片，會用於 `og:image`、`twitter:image`。
 - **OG Site Name**：會用於 `og:site_name`；留空時使用 Site Title。
 
-如果後台未設定，系統才會 fallback 到 [app/app.config.ts](file:///Users/david/Documents/git/tbdavid2019/Sink/app/app.config.ts) 的預設值。
+如果後台未設定，系統才會 fallback 到 [app/app.config.ts](app/app.config.ts) 的預設值。
 
 **注意**：首頁 `/` 已改為 runtime SSR 回應，避免社群 crawler 只讀到 build-time 的舊 OG meta。
 
@@ -350,7 +350,7 @@ NUXT_SITE_TOKEN="您的自訂密碼"
 
 如果您在網站各處（如瀏覽器分頁標題、頁首或頁尾左側）看到預設的 `glsoft.ai` 或公司版權資訊，這是 fallback 設定的來源。
 
-若要更改首頁顯示的文字、網站標題與公司資訊，請直接修改 [app/app.config.ts](file:///Users/david/Documents/git/tbdavid2019/Sink/app/app.config.ts) 檔案。
+若要更改首頁顯示的文字、網站標題與公司資訊，請直接修改 [app/app.config.ts](app/app.config.ts) 檔案。
 
 ### 配置選項說明：
 
@@ -411,7 +411,7 @@ export default defineAppConfig({
    pnpm wrangler login
    ```
 2. 設定您的 KV 命名空間 ID：
-   - 確保在 [wrangler.jsonc](file:///Users/david/Documents/git/tbdavid2019/Sink/wrangler.jsonc) 中已填入正確的 `kv_namespaces.id`（請參考上方的首次部署步驟）。
+   - 確保在 [wrangler.jsonc](wrangler.jsonc) 中已填入正確的 `kv_namespaces.id`（請參考上方的首次部署步驟）。
 3. 執行部署指令：
    ```bash
    pnpm deploy:worker
@@ -421,4 +421,4 @@ export default defineAppConfig({
 
 ## 📝 開發與部署備忘錄 (CHANGELOG)
 
-如果您在開發、部署（例如 Cloudflare Pages API 404 問題）或登入設定中遇到任何問題，請參考根目錄下的 [CHANGELOG.md](file:///Users/david/Documents/git/tbdavid2019/Sink/CHANGELOG.md) 檔案，裡面詳細記錄了常見的「踩坑」經驗與解決方案。
+如果您在開發、部署（例如 Cloudflare Pages API 404 問題）或登入設定中遇到任何問題，請參考根目錄下的 [CHANGELOG.md](CHANGELOG.md) 檔案，裡面詳細記錄了常見的「踩坑」經驗與解決方案。
