@@ -12,6 +12,19 @@ function escapeHtml(value: string) {
     .replace(/'/g, '&#39;')
 }
 
+function safeJsonStringify(value: any) {
+  return JSON.stringify(value).replace(/</g, '\\u003c')
+}
+
+function sanitizeTransitionHtml(html: string) {
+  return html
+    .replace(/<\s*script\b[^>]*>[\s\S]*?<\s*\/\s*script\s*>/gi, '')
+    .replace(/<\s*(iframe|object|embed|form|link|meta|style|base)\b[^>]*>/gi, '')
+    .replace(/\bon\w+\s*=\s*(['"]).*?\1/gi, '')
+    .replace(/\bon\w+\s*=\s*[^\s>]+/gi, '')
+    .replace(/javascript:/gi, '')
+}
+
 function isSocialPreviewCrawler(userAgent: string) {
   return /facebookexternalhit|facebot|twitterbot|slackbot|discordbot|telegrambot|whatsapp|linkedinbot|pinterest|skypeuripreview|line/i.test(userAgent)
 }
@@ -101,6 +114,9 @@ export default eventHandler(async (event) => {
         console.error('Failed write access log:', error)
       }
       const target = redirectWithQuery ? withQuery(link.url, getQuery(event)) : link.url
+      if (!target.startsWith('http://') && !target.startsWith('https://')) {
+        return sendRedirect(event, '/', 302)
+      }
       const userAgent = getHeader(event, 'user-agent') || ''
 
       if (isSocialPreviewCrawler(userAgent)) {
@@ -147,7 +163,7 @@ export default eventHandler(async (event) => {
         const redirectDelaySeconds = tracking.redirectDelaySeconds
         const safeTarget = escapeHtml(target)
         const customHtmlContent = transitionContent
-          ? `<div class="w-full text-slate-800 dark:text-slate-100">${transitionContent}</div>`
+          ? `<div class="w-full text-slate-800 dark:text-slate-100">${sanitizeTransitionHtml(transitionContent)}</div>`
           : `
             <div class="flex flex-col items-center text-center space-y-2">
               <div class="p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-full text-emerald-500">
@@ -176,7 +192,7 @@ export default eventHandler(async (event) => {
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
-    gtag('config', ${JSON.stringify(tracking.gaMeasurementId)}, { send_page_view: false });
+    gtag('config', ${safeJsonStringify(tracking.gaMeasurementId)}, { send_page_view: false });
   </script>`
     : ''}
   ${tracking.enabled && tracking.metaPixelId
@@ -186,7 +202,7 @@ export default eventHandler(async (event) => {
     n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
     t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}
     (window, document,'script','https://connect.facebook.net/en_US/fbevents.js');
-    fbq('init', ${JSON.stringify(tracking.metaPixelId)});
+    fbq('init', ${safeJsonStringify(tracking.metaPixelId)});
   </script>`
     : ''}
   ${tracking.enabled && tracking.lineLiffId
@@ -244,7 +260,7 @@ export default eventHandler(async (event) => {
   </div>
 
   <script>
-    const trackingConfig = ${JSON.stringify({
+    const trackingConfig = ${safeJsonStringify({
       enabled: tracking.enabled,
       gaMeasurementId: tracking.gaMeasurementId,
       metaPixelId: tracking.metaPixelId,
@@ -256,7 +272,7 @@ export default eventHandler(async (event) => {
     })};
     let countdown = trackingConfig.redirectDelaySeconds || 5;
     const countdownEl = document.getElementById('countdown');
-    const target = ${JSON.stringify(target)};
+    const target = ${safeJsonStringify(target)};
     const redirectNowButton = document.getElementById('btn-redirect-now');
     const targetLink = document.getElementById('target-link');
     let timer;

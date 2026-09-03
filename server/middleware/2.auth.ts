@@ -1,7 +1,7 @@
 export default eventHandler((event) => {
   const token = getHeader(event, 'Authorization')?.replace(/^Bearer\s+/, '')
 
-  if (event.path.startsWith('/api/') && !event.path.startsWith('/api/_') && !event.path.startsWith('/api/public/') && !event.path.startsWith('/api/mcp')) {
+  if (event.path.startsWith('/api/') && !event.path.startsWith('/api/_') && !event.path.startsWith('/api/public/') && !event.path.startsWith('/api/mcp') && !event.path.startsWith('/api/tracking/event')) {
     const configToken = useRuntimeConfig(event).siteToken || ''
     const validTokens = configToken.split(',').map(t => t.trim()).filter(Boolean)
 

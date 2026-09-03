@@ -28,3 +28,5 @@ cache
 public/world.json
 .dev.*
 .kiro/steering/locale.md
+.agents
+skills-lock.json

@@ -48,12 +48,23 @@ definePageMeta({
 const enterpriseSettings = ref({ enabled: false, content: '' })
 const loading = ref(true)
 
+function sanitizeMarkdownHtml(html) {
+  if (!html || typeof html !== 'string')
+    return ''
+  return html
+    .replace(/<\s*script\b[^>]*>[\s\S]*?<\s*\/\s*script\s*>/gi, '')
+    .replace(/<\s*(iframe|object|embed|form|base)\b[^>]*>/gi, '')
+    .replace(/\bon\w+\s*=\s*(['"]).*?\1/gi, '')
+    .replace(/\bon\w+\s*=\s*[^\s>]+/gi, '')
+    .replace(/javascript:/gi, '')
+}
+
 const renderedHtml = computed(() => {
   try {
-    return marked.parse(enterpriseSettings.value.content || '')
+    return sanitizeMarkdownHtml(marked.parse(enterpriseSettings.value.content || ''))
   }
   catch {
-    return enterpriseSettings.value.content
+    return sanitizeMarkdownHtml(enterpriseSettings.value.content)
   }
 })
 

@@ -15,5 +15,13 @@ function query2sql(query: Query, event: H3Event): string {
 export default eventHandler(async (event) => {
   const query = await getValidatedQuery(event, QuerySchema.parse)
   const sql = query2sql(query, event)
-  return useWAE(event, sql)
+  try {
+    return await useWAE(event, sql)
+  }
+  catch (error: any) {
+    throw createError({
+      status: error?.status || 500,
+      statusText: 'Analytics query failed',
+    })
+  }
 })

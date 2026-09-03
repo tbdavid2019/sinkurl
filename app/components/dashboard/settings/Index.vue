@@ -190,21 +190,32 @@ async function saveTransitionSettings() {
   }
 }
 
+function sanitizeMarkdownHtml(html) {
+  if (!html || typeof html !== 'string')
+    return ''
+  return html
+    .replace(/<\s*script\b[^>]*>[\s\S]*?<\s*\/\s*script\s*>/gi, '')
+    .replace(/<\s*(iframe|object|embed|form|base)\b[^>]*>/gi, '')
+    .replace(/\bon\w+\s*=\s*(['"]).*?\1/gi, '')
+    .replace(/\bon\w+\s*=\s*[^\s>]+/gi, '')
+    .replace(/javascript:/gi, '')
+}
+
 const previewHtml = computed(() => {
   try {
-    return marked.parse(content.value || '')
+    return sanitizeMarkdownHtml(marked.parse(content.value || ''))
   }
   catch {
-    return content.value
+    return sanitizeMarkdownHtml(content.value)
   }
 })
 
 const previewTransitionHtml = computed(() => {
   try {
-    return marked.parse(transitionContent.value || '')
+    return sanitizeMarkdownHtml(marked.parse(transitionContent.value || ''))
   }
   catch {
-    return transitionContent.value
+    return sanitizeMarkdownHtml(transitionContent.value)
   }
 })
 

@@ -5,7 +5,7 @@ import { z } from 'zod'
 const { select } = SqlBricks
 
 const MetricsQuerySchema = QuerySchema.extend({
-  type: z.string(),
+  type: z.string().refine(key => key in logsMap, { message: 'Invalid metric type' }),
 })
 
 function query2sql(query: z.infer<typeof MetricsQuerySchema>, event: H3Event): string {
@@ -21,5 +21,13 @@ function query2sql(query: z.infer<typeof MetricsQuerySchema>, event: H3Event): s
 export default eventHandler(async (event) => {
   const query = await getValidatedQuery(event, MetricsQuerySchema.parse)
   const sql = query2sql(query, event)
-  return useWAE(event, sql)
+  try {
+    return await useWAE(event, sql)
+  }
+  catch (error: any) {
+    throw createError({
+      status: error?.status || 500,
+      statusText: 'Analytics query failed',
+    })
+  }
 })

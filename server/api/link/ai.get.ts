@@ -1,9 +1,21 @@
 import { destr } from 'destr'
 import { z } from 'zod'
 
+function isValidHttpUrl(val: string) {
+  try {
+    const parsed = new URL(val)
+    return ['http:', 'https:'].includes(parsed.protocol)
+  }
+  catch {
+    return false
+  }
+}
+
 export default eventHandler(async (event) => {
   const url = (await getValidatedQuery(event, z.object({
-    url: z.string().url(),
+    url: z.string().trim().url().max(2048).refine(isValidHttpUrl, {
+      message: 'URL must use http:// or https://',
+    }),
   }).parse)).url
   const { cloudflare } = event.context
   const { AI } = cloudflare.env

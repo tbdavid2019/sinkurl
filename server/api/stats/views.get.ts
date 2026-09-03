@@ -11,8 +11,8 @@ const unitMap: { [x: string]: string } = {
 }
 
 const ViewsQuerySchema = QuerySchema.extend({
-  unit: z.string(),
-  clientTimezone: z.string().default('Etc/UTC'),
+  unit: z.enum(['minute', 'hour', 'day']),
+  clientTimezone: z.string().trim().regex(/^[\w/+-]+$/).default('Etc/UTC'),
 })
 
 function query2sql(query: z.infer<typeof ViewsQuerySchema>, event: H3Event): string {
@@ -26,5 +26,13 @@ function query2sql(query: z.infer<typeof ViewsQuerySchema>, event: H3Event): str
 export default eventHandler(async (event) => {
   const query = await getValidatedQuery(event, ViewsQuerySchema.parse)
   const sql = query2sql(query, event)
-  return useWAE(event, sql)
+  try {
+    return await useWAE(event, sql)
+  }
+  catch (error: any) {
+    throw createError({
+      status: error?.status || 500,
+      statusText: 'Analytics query failed',
+    })
+  }
 })

@@ -357,3 +357,48 @@ describe.sequential('/api/link/delete', () => {
     expect(response.status).toBe(401)
   })
 })
+
+describe('/api/link security validations', () => {
+  it('rejects javascript: protocol URLs', async () => {
+    const response = await fetchWithAuth('/api/link/create', {
+      method: 'POST',
+      body: JSON.stringify({
+        url: 'javascript:alert(1)',
+        slug: `xss-test-${Date.now()}`,
+      }),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+    expect(response.status).toBe(400)
+  })
+
+  it('rejects reserved slug routes', async () => {
+    const response = await fetchWithAuth('/api/link/create', {
+      method: 'POST',
+      body: JSON.stringify({
+        url: 'https://example.com/safe',
+        slug: 'dashboard',
+        isCustomSlug: true,
+      }),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+    expect(response.status).toBe(400)
+  })
+
+  it('allows unauthenticated POST /api/tracking/event without 401', async () => {
+    const response = await fetch('/api/tracking/event', {
+      method: 'POST',
+      body: JSON.stringify({
+        event: 'transition_view',
+        slug: 'any-slug',
+      }),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+    expect(response.status).not.toBe(401)
+  })
+})

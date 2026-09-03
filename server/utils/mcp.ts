@@ -185,7 +185,7 @@ export function isAuthorized(event: H3Event, explicitToken?: string): boolean {
   const validTokens = configToken.split(',').map(t => t.trim()).filter(Boolean)
 
   if (validTokens.length === 0)
-    return true
+    return false
   return Boolean(token && validTokens.includes(token))
 }
 
@@ -239,6 +239,11 @@ export async function executeMcpTool(event: H3Event, name: string, args: Record<
       const rawSlug = args.slug?.trim() || customAlphabet('23456789abcdefghjkmnpqrstuvwxyz', 6)()
       const { caseSensitive } = useRuntimeConfig(event)
       const slug = caseSensitive ? rawSlug : rawSlug.toLowerCase()
+
+      const { reserveSlug } = useAppConfig(event)
+      if (reserveSlug && reserveSlug.includes(slug)) {
+        throw new Error(`Slug "${slug}" is a reserved system route and cannot be used`)
+      }
 
       const parsedExpiration = parseExpirationDuration(args.expiration)
       const expiration = getExpiration(event, parsedExpiration)
@@ -340,11 +345,22 @@ export async function executeMcpTool(event: H3Event, name: string, args: Record<
         }
       }
 
+      const authorized = isAuthorized(event, args.token)
+      const dataToReturn = authorized
+        ? raw
+        : {
+            slug: (raw as any).slug,
+            url: (raw as any).url,
+            title: (raw as any).title,
+            description: (raw as any).description,
+            image: (raw as any).image,
+          }
+
       return {
         content: [
           {
             type: 'text',
-            text: JSON.stringify(raw, null, 2),
+            text: JSON.stringify(dataToReturn, null, 2),
           },
         ],
       }
@@ -404,6 +420,19 @@ export async function executeMcpTool(event: H3Event, name: string, args: Record<
             {
               type: 'text',
               text: 'Authentication required. Please provide a valid site token.',
+            },
+          ],
+          isError: true,
+        }
+      }
+
+      const { previewMode } = useRuntimeConfig(event).public
+      if (previewMode) {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: 'Preview mode cannot delete links.',
             },
           ],
           isError: true,

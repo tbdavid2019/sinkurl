@@ -4,6 +4,39 @@
 
 ---
 
+## 📅 [2026-09-03]
+
+### 📌 全面安全性稽核與漏洞修復 (Security Audit Remediation)
+
+經過 Cloudflare `security-audit-skill` 6 階段深度稽核，全面修復發現的高風險與中風險安全弱點：
+
+### ✅ 變更內容
+
+* **URL 協議限制與 Stored DOM XSS 防禦**：
+  * 在 [`schemas/link.ts`](file:///Users/david/git/tbdavid2019/sinkurl/schemas/link.ts) 中針對 `url` 與 `image` 加入協定限制驗證，強制僅允許 `http://` 與 `https://`，嚴格阻斷 `javascript:`、`data:` 與 `vbscript:` 偽協定。
+  * 在 [`server/api/link/ai.get.ts`](file:///Users/david/git/tbdavid2019/sinkurl/server/api/link/ai.get.ts) 補齊 URL 最大長度與 `http`/`https` 驗證。
+  * 在 [`server/middleware/1.redirect.ts`](file:///Users/david/git/tbdavid2019/sinkurl/server/middleware/1.redirect.ts) 執行重定向與渲染前強制檢查 `target` 協定。
+* **過渡跳轉頁面 XSS 與腳本逃逸防護**：
+  * 在 [`server/middleware/1.redirect.ts`](file:///Users/david/git/tbdavid2019/sinkurl/server/middleware/1.redirect.ts) 新增 `sanitizeTransitionHtml` 過濾器，清除 `transitionContent` 內的危險標籤（`<script>`、`<iframe>`、`<object>` 等）與 `on*` 事件屬性。
+  * 新增 `safeJsonStringify` 序列化函式，將內聯 `<script>` 中的 `<` 逸出為 `\u003c`，杜絕藉由 `</script>` 標籤逃逸執行的 XSS。
+* **Markdown 渲染 XSS 防禦**：
+  * 在 [`app/pages/index.vue`](file:///Users/david/git/tbdavid2019/sinkurl/app/pages/index.vue) 與 [`app/components/dashboard/settings/Index.vue`](file:///Users/david/git/tbdavid2019/sinkurl/app/components/dashboard/settings/Index.vue) 的 `marked.parse` 輸出端新增 HTML 清洗函式，消除公開首頁與後台預覽區塊的代碼注入風險。
+* **MCP 服務存取控制與防竄改強化**：
+  * **Fail-Closed 驗證防護**：修正 [`server/utils/mcp.ts`](file:///Users/david/git/tbdavid2019/sinkurl/server/utils/mcp.ts) `isAuthorized`，當未配置站點金鑰時強制拒絕存取（fail-closed），杜絕空金鑰全開放漏洞。
+  * **Demo 預覽模式保護**：在 MCP `delete_link` 工具中補齊 `previewMode` 判斷，阻斷 demo 站點利用公開 `SinkCool` 金鑰刪除短網址的越權操作。
+  * **保留路由衝突防護**：在 MCP `shorten_url`、`server/api/link/create.post.ts` 與 `server/api/link/upsert.post.ts` 全面強制校驗 `appConfig.reserveSlug`，防止惡意佔用 `dashboard`、`api`、`mcp` 等系統核心路徑。
+  * **未授權查詢脫敏**：未攜帶合法金鑰調用 MCP `lookup_link` 時自動過濾管理備註 `comment` 等機敏欄位。
+* **Cloudflare Analytics Engine SQL 注入與錯誤洩漏修復**：
+  * 在 [`server/api/stats/views.get.ts`](file:///Users/david/git/tbdavid2019/sinkurl/server/api/stats/views.get.ts) 中為 `clientTimezone` 加上嚴格的 IANA 時區正則校驗 `/^[A-Za-z0-9_/+ -]+$/`，並將 `unit` 限制為 enum，杜絕 ClickHouse 語法破出注入。
+  * 在 [`server/api/stats/views.get.ts`](file:///Users/david/git/tbdavid2019/sinkurl/server/api/stats/views.get.ts)、[`metrics.get.ts`](file:///Users/david/git/tbdavid2019/sinkurl/server/api/stats/metrics.get.ts) 與 [`counters.get.ts`](file:///Users/david/git/tbdavid2019/sinkurl/server/api/stats/counters.get.ts) 將 `useWAE` 包裹於 `try/catch` 之中，遮蔽上游錯誤訊息，防止 `cfAccountId` 等帳號資訊外洩。
+  * 在 `metrics.get.ts` 驗證 `query.type` 是否存在於 `logsMap` 鍵值中。
+* **過渡頁面追蹤信標 401 錯誤修復**：
+  * 調整 [`server/middleware/2.auth.ts`](file:///Users/david/git/tbdavid2019/sinkurl/server/middleware/2.auth.ts)，將 `/api/tracking/event` 納入身分驗證豁免清單，讓一般訪客於過渡跳轉頁面觸發的 GA4 / Meta Pixel / LINE 追蹤事件與 Token 驗證能正常傳輸。
+* **測試覆蓋**：
+  * 於 [`tests/api/link.spec.ts`](file:///Users/david/git/tbdavid2019/sinkurl/tests/api/link.spec.ts) 補充安全性迴歸測試（阻擋 `javascript:`、阻擋保留 slug、驗證追蹤信標），全數 51 個測試皆順利通過。
+
+---
+
 ## 📅 [2026-08-19]
 
 ### 📌 新增 Model Context Protocol (MCP) 與 Cloudflare WebMCP 支援

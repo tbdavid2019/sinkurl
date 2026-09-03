@@ -9,6 +9,14 @@ export default eventHandler(async (event) => {
     link.slug = link.slug.toLowerCase()
   }
 
+  const { reserveSlug } = useAppConfig(event)
+  if (reserveSlug && reserveSlug.includes(link.slug)) {
+    throw createError({
+      status: 400,
+      statusText: `Slug "${link.slug}" is a reserved system route`,
+    })
+  }
+
   const { cloudflare } = event.context
   const { KV } = cloudflare.env
 
